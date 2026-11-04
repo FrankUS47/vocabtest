@@ -142,6 +142,7 @@ textarea{width:100%;min-height:110px}
    <label id="tL">測驗時間 <select id="t"><option value="60">1 分鐘</option><option value="180">3 分鐘</option><option value="300" selected>5 分鐘</option><option value="600">10 分鐘</option><option value="900">15 分鐘</option></select></label>
    <label>方式 <select id="mode"><option value="e2z">英翻中</option><option value="z2e">中翻英</option><option value="pos">詞性測驗</option><option value="mem">記憶測驗</option><option value="listen">聽力測驗</option><option value="spell">拼字測驗（看中文打英文）</option><option value="fill">單字填空（缺字母）</option></select></label>
    <label>發音 <select id="acc"><option value="en-US">美式</option><option value="en-GB">英式</option><option value="en-AU">澳洲</option><option value="en-CA">加拿大</option></select></label>
+   <label>語音 <select id="vsel"></select></label><button class="sm" id="vtest">試聽</button>
    <span class="hint" id="voiceInfo"></span>
    <button class="pri" id="start">開始測試</button>
    <label>練習順序 <select id="pord"><option value="seq">依序</option><option value="rnd">隨機</option></select></label>
@@ -239,6 +240,7 @@ quiet|安靜的|adj.
    <label>配色 <select id="rtheme"><option value="auto">跟隨系統</option><option value="light">白底黑字</option><option value="dark">黑底白字</option></select></label>
    <label><input type="checkbox" id="rspeak"> 自動發音</label>
    <label>口音 <select id="racc"><option value="en-US">美式</option><option value="en-GB">英式</option><option value="en-AU">澳洲</option><option value="en-CA">加拿大</option></select></label>
+   <label>語音 <select id="rvsel"></select></label><button class="sm" id="rvtest">試聽</button>
    <label><input type="checkbox" id="rwake" checked> 播放時保持螢幕不關閉</label>
   </div>
   <div class="row"><button class="pri" id="rstart">▶ 開始播放</button></div>
@@ -283,6 +285,7 @@ quiet|安靜的|adj.
   <div id="listenbox" class="hide">
    <div class="lset">
     <label>發音 <select id="lacc"><option value="en-US">美國</option><option value="en-GB">英國</option><option value="en-AU">澳洲</option><option value="en-CA">加拿大</option></select></label>
+    <label>語音 <select id="lvsel"></select></label><button class="sm" id="lvtest">試聽</button>
     <label>速度 <select id="lrate"><option value="0.5">0.5×</option><option value="0.75">0.75×</option><option value="1" selected>1×</option><option value="1.25">1.25×</option><option value="1.5">1.5×</option><option value="1.75">1.75×</option><option value="2">2×</option></select></label>
     <label>中文選項 <select id="lchoices"><option value="4" selected>4 個</option><option value="5">5 個</option><option value="10">10 個</option></select></label>
     <label>發音次數 <select id="lrep"><option value="1" selected>1 次</option><option value="2">2 次</option><option value="3">3 次</option></select></label>
@@ -487,19 +490,33 @@ function spk(i){return `<button class="spk" data-i="${i}" title="發音">🔊</b
 let VOICES=[];
 const LLAB={'en-US':'美式','en-GB':'英式','en-AU':'澳洲','en-CA':'加拿大'};
 const FB={'en-gb':/\b(UK|United Kingdom|British|Great Britain|Daniel|Hazel|George|Serena|Kate|Oliver|Arthur|Martha)\b/i,'en-au':/\b(AU|Australia|Australian|Karen|Catherine|Lee|Gordon)\b/i,'en-ca':/\b(CA|Canada|Canadian|Heather|Linda|Rishi)\b/i};
+let VPREF={};try{VPREF=JSON.parse(localStorage.getItem('vq_voices')||'{}')}catch(e){}
+const savePref=()=>{try{localStorage.setItem('vq_voices',JSON.stringify(VPREF))}catch(e){}};
 function pickVoice(lang){
- const L=lang.toLowerCase(),good=v=>/natural|online|premium|enhanced|google/i.test(v.name)?1:0;
+ const L=lang.toLowerCase();
+ if(VPREF[L]){const pv=VOICES.find(x=>x.voiceURI===VPREF[L]);if(pv)return pv}
+ const good=v=>/premium/i.test(v.name+' '+v.voiceURI)?3:/enhanced|natural|neural|siri/i.test(v.name+' '+v.voiceURI)?2:/online|google/i.test(v.name)?1:0;
  let c=VOICES.filter(v=>v.lang.replace('_','-').toLowerCase()===L).sort((a,b)=>good(b)-good(a))[0];
  if(!c&&FB[L])c=VOICES.find(v=>/^en/i.test(v.lang)&&FB[L].test(v.name));
  return c||null}
 const voiceMsg=lang=>{const v=pickVoice(lang);return v?'使用語音：'+v.name+'（'+v.lang+'）':'⚠ 這台裝置沒有找到'+LLAB[lang]+'語音，會使用預設語音（聽起來可能一樣）'};
 function showVoice(){
  if(!('speechSynthesis' in window)){$('voiceInfo').textContent='⚠ 此瀏覽器不支援發音';return}
- $('voiceInfo').textContent=voiceMsg($('acc').value);showLVoice()}
+ $('voiceInfo').textContent=voiceMsg($('acc').value);showLVoice();refreshVoiceUI()}
 function showLVoice(){if('speechSynthesis' in window)$('lvoice').textContent=voiceMsg($('lacc').value)}
+function fillVS(sel,langSel){
+ if(!sel||!langSel)return;const lang=langSel.value,L=lang.toLowerCase();
+ const vs=VOICES.filter(v=>v.lang.replace('_','-').toLowerCase()===L);
+ sel.innerHTML='<option value="">自動（系統推薦）</option>'+vs.map(v=>`<option value="${esc(v.voiceURI)}">${esc(v.name)}</option>`).join('');
+ const p=VPREF[L];sel.value=p&&vs.some(v=>v.voiceURI===p)?p:''}
+function refreshVoiceUI(){[['vsel','acc'],['rvsel','racc'],['lvsel','lacc']].forEach(([a,b])=>fillVS($(a),$(b)))}
+function bindVS(selId,langId,testId){
+ const sel=$(selId),ls=$(langId);
+ sel.onchange=()=>{const L=ls.value.toLowerCase();if(sel.value)VPREF[L]=sel.value;else delete VPREF[L];savePref();refreshVoiceUI();showVoice()};
+ $(testId).onclick=()=>speak('Hello! This is how I sound. Nice to meet you.',ls.value,.9)}
 function loadVoices(){if('speechSynthesis' in window){VOICES=speechSynthesis.getVoices();showVoice()}}
 if('speechSynthesis' in window){speechSynthesis.onvoiceschanged=loadVoices;}
-loadVoices();$('acc').onchange=showVoice;$('lacc').onchange=showLVoice;
+loadVoices();$('acc').onchange=showVoice;$('lacc').onchange=()=>{showLVoice();refreshVoiceUI()};$('racc').onchange=refreshVoiceUI;bindVS('vsel','acc','vtest');bindVS('rvsel','racc','rvtest');bindVS('lvsel','lacc','lvtest');
 const curLang=()=>LISTEN?$('lacc').value:$('acc').value,curRate=()=>LISTEN?+$('lrate').value:.9;
 function speakOnce(t,lang,rate,done){
  if(!('speechSynthesis' in window)){done&&done();return}
