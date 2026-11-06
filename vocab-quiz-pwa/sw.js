@@ -1,6 +1,6 @@
 // 離線快取：第一次連網開啟時會把全部檔案存到手機裡，之後沒有網路也能使用。
 // 更新題庫或程式後，把下面的版本號加 1（例如 v2），手機下次連網開啟就會重新下載。
-const CACHE = "vocab-quiz-v2";
+const CACHE = "vocab-quiz-v7";
 const FILES = [
  "./",
  "index.html",
@@ -9,13 +9,18 @@ const FILES = [
  "icons/icon-512.png",
  "icons/apple-touch-icon.png",
  "data/_template.js",
+ "data/gsat-vocab.js",
  "data/index.js",
  "data/junior.js",
  "data/junior1200.js",
  "data/law-vocab.js",
+ "data/mcq-cap.js",
+ "data/mcq-gsat.js",
  "data/mcq-junior.js",
+ "data/mcq-national-exam.js",
  "data/mcq-senior.js",
  "data/mcq-toeic.js",
+ "data/national-exam-vocab.js",
  "data/phrases-dixson.js",
  "data/senior.js",
  "data/similar.js",
