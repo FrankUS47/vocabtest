@@ -30,6 +30,13 @@ select,button,textarea{font:inherit;color:var(--tx);background:var(--card);borde
 button{cursor:pointer}button.pri{background:var(--pri);color:#fff;border-color:var(--pri);padding:8px 22px;font-weight:600}
 button.sm{padding:3px 10px;font-size:13px}
 .hide{display:none!important}
+.sres{border:1px solid var(--bd);border-radius:10px;max-height:260px;overflow:auto;margin:6px 0;background:var(--card)}
+.sres button{display:block;width:100%;text-align:left;border:none;border-bottom:1px solid var(--bd);border-radius:0;background:transparent;padding:8px 10px;cursor:pointer;font-size:14px;color:var(--tx)}
+.sres button:hover{background:var(--sel)}
+tr.hl td{background:#ffe08a!important;color:#000!important}.mres.hl{box-shadow:0 0 0 3px #e0b100;background:rgba(255,224,138,.25)}
+#rvModal{position:fixed;inset:0;z-index:80;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:12px}
+.rv-card{background:var(--card);color:var(--tx);border-radius:14px;padding:14px;max-width:680px;width:100%;max-height:88vh;overflow:auto}
+.rvsp{border:none;background:transparent;cursor:pointer;font-size:18px}
 .fword{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:6px;font-size:clamp(28px,7vmin,56px);font-weight:700;margin:18px 0;line-height:1.2}
 .fch{display:inline-flex;align-items:center;justify-content:center;min-width:.62em}.fsp{display:inline-block;width:.6em}
 .fin{width:1.25em;height:1.5em;text-align:center;font-size:inherit;font-weight:700;border:2px solid var(--pri);border-radius:8px;background:var(--card);color:var(--tx);padding:0;text-transform:none;ime-mode:disabled}
@@ -195,7 +202,7 @@ quiet|安靜的|adj.
 <div id="mcqQuiz" class="hide">
  <div class="panel">
   <div class="info" id="minfo"></div>
-  <div class="bar"><span id="mprog"></span><span style="font-size:15px">總時間 <b id="mtotalT" style="font-variant-numeric:tabular-nums"></b></span><span id="mtimer" style="font-size:20px;font-variant-numeric:tabular-nums"></span><button class="sm" id="mstop">結束測驗</button></div>
+  <div class="bar"><span id="mprog"></span><span style="font-size:15px">總時間 <b id="mtotalT" style="font-variant-numeric:tabular-nums"></b></span><span id="mtimer" style="font-size:20px;font-variant-numeric:tabular-nums"></span><span><button class="sm" id="mprev" title="回顧上一題（時間照常計算）">◀ 上一題</button> <button class="sm" id="mstop">結束測驗</button></span></div>
   <div class="hint" id="mref"></div>
   <div class="mpass hide" id="mpass"></div>
   <div class="mq" id="mq"></div>
@@ -215,6 +222,8 @@ quiet|安靜的|adj.
  </div>
  <div class="panel">
   <div class="bar"><span>每題結果</span><label style="font-weight:400"><input type="checkbox" id="monlyW"> 只看錯題</label></div>
+  <input id="msearch" type="search" placeholder="🔍 搜尋題目、選項或詳解（英文或中文關鍵字）" style="width:100%;margin:6px 0">
+  <div id="msres" class="sres hide"></div>
   <div id="mlist"></div>
   <div class="row"><button class="pri" id="magain">再測一次</button><button id="mwrongBtn" class="hide">只測錯的題目</button><button id="mback">回設定</button></div>
  </div>
@@ -259,7 +268,7 @@ quiet|安靜的|adj.
 <div id="quiz" class="hide">
  <div class="panel">
   <div class="info" id="qinfo"></div>
-  <div class="bar"><span id="prog"></span><span id="timer">00:00</span><button class="sm" id="stop">結束測驗</button></div>
+  <div class="bar"><span id="prog"></span><span id="timer">00:00</span><span><button class="sm" id="qprev" title="回顧上一題（時間照常計算）">◀ 上一題</button> <button class="sm" id="stop">結束測驗</button></span></div>
   <p class="hint" id="qhint"></p>
   <div class="hint" id="memmsg" style="font-weight:700;font-size:15px"></div>
   <div class="grid" id="en"></div>
@@ -324,11 +333,20 @@ quiet|安靜的|adj.
  </div>
  <div class="panel">
   <div class="bar"><span>每個單字的正確答案</span><label style="font-weight:400"><input type="checkbox" id="onlyW"> 只看錯題</label></div>
+  <input id="vsearch" type="search" placeholder="🔍 搜尋題目或答案（英文或中文關鍵字）" style="width:100%;margin:6px 0">
+  <div id="vsres" class="sres hide"></div>
   <div class="scroll"><table><thead id="thead"></thead><tbody id="rows"></tbody></table></div>
   <div class="row"><button class="pri" id="again">再測一次</button><button id="wrongBtn" class="hide">只測錯的單字</button><button id="back">回設定</button></div>
  </div>
 </div>
 </div>
+
+<div id="rvModal" class="hide"><div class="rv-card">
+ <div class="bar"><b id="rvTitle"></b><button class="sm" id="rvClose">✕ 關閉，回到目前的題目</button></div>
+ <div id="rvBody"></div>
+ <div class="row" style="justify-content:space-between"><button id="rvOlder">◀ 更早一題</button><button id="rvNewer">較新一題 ▶</button></div>
+ <p class="hint">這裡只是回顧：測驗時間照常計算，不會改變成績，關閉後回到你原本的題目。</p>
+</div></div>
 
 <script>
 var SD=document;
@@ -336,7 +354,7 @@ const $=id=>document.getElementById(id)||SD.getElementById(id);
 const shuf=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a};
 var MCQ_SETS=[];let homeTab='v';
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const show=id=>{['setup','quiz','result','practice','mcqSetup','mcqQuiz','mcqResult','slideSetup','slidePlay'].forEach(x=>{if(x==='slidePlay'&&typeof RS!=='undefined'&&RS&&RS.win)return;$(x).classList.toggle('hide',x!==id)});document.body.classList.toggle('playing',id==='slidePlay');
+const show=id=>{closeReview();['setup','quiz','result','practice','mcqSetup','mcqQuiz','mcqResult','slideSetup','slidePlay'].forEach(x=>{if(x==='slidePlay'&&typeof RS!=='undefined'&&RS&&RS.win)return;$(x).classList.toggle('hide',x!==id)});document.body.classList.toggle('playing',id==='slidePlay');
  const isSetup=id==='setup'||id==='mcqSetup'||id==='slideSetup';$('home').classList.toggle('hide',isSetup||id==='slidePlay');$('tabs').classList.toggle('hide',!isSetup);
  $('tabV').classList.toggle('pri',homeTab==='v');$('tabM').classList.toggle('pri',homeTab==='mcq');$('tabR').classList.toggle('pri',homeTab==='r')};
 const KIND={word:'單字',phrase:'片語'};
@@ -851,6 +869,42 @@ function slideBack(closed){
  show('slidePlay')}
 $('slMini').onclick=e=>{e.stopPropagation();slideMini()};
 $('slTheme').onclick=e=>{e.stopPropagation();slideThemeToggle()};
+// ===== 結果頁搜尋、測驗中回顧上一題 =====
+function hl(el){if(!el)return;el.classList.remove('hl');void el.offsetWidth;el.classList.add('hl');setTimeout(()=>el.classList.remove('hl'),2800)}
+function searchBind(inp,box,getList,render,jump){
+ const run=()=>{const terms=inp.value.toLowerCase().split(/\s+/).filter(Boolean);
+  if(!terms.length){box.classList.add('hide');box.innerHTML='';return}
+  const hits=getList().filter(it=>terms.every(t=>it.text.includes(t)));
+  box.classList.remove('hide');
+  box.innerHTML=hits.length?'<div class="hint" style="padding:6px 10px">找到 '+hits.length+' 筆，點一下可跳到該題</div>'+hits.slice(0,60).map(it=>`<button data-j="${it.i}">${render(it)}</button>`).join('')+(hits.length>60?'<div class="hint" style="padding:6px 10px">只顯示前 60 筆，請輸入更多關鍵字縮小範圍</div>':''):'<div class="hint" style="padding:6px 10px">找不到符合的題目</div>'};
+ inp.oninput=run;
+ box.onclick=e=>{const b=e.target.closest('button[data-j]');if(b)jump(+b.dataset.j)}}
+searchBind($('vsearch'),$('vsres'),()=>log.map((x,i)=>({i,x,text:(x.en+' '+x.zh+' '+x.ans+' '+(x.pos||'')+' '+(x.sim||'')).toLowerCase()})),
+ it=>`${it.i+1}. ${esc(it.x.en)} ＝ ${esc(it.x.zh)}　<span class="hint">你的答案：${esc(it.x.ans)} ${it.x.ok?'✓':'✗'}</span>`,
+ i=>{if(!$('vr'+i)){$('onlyW').checked=false;drawRows()}const r=$('vr'+i);if(r){r.scrollIntoView({block:'center',behavior:'smooth'});hl(r)}});
+searchBind($('msearch'),$('msres'),()=>M?M.log.map((x,i)=>{const q=x.q;return {i,x,text:((q.no||'')+' '+q.q+' '+q.o.join(' ')+' '+(q.e||'')+' '+(q.p!==undefined&&M.c.s.passages?M.c.s.passages[q.p]:'')).toLowerCase()}}):[],
+ it=>`${it.i+1}. ${esc(((it.x.q.no!==undefined?it.x.q.no+'. ':'')+it.x.q.q).slice(0,70))}　<span class="hint">${it.x.ok?'✓':'✗'}</span>`,
+ i=>{if(!$('mr'+i)){$('monlyW').checked=false;drawMList()}const r=$('mr'+i);if(r){r.scrollIntoView({block:'center',behavior:'smooth'});hl(r)}});
+let rvIdx=0,rvKind='v';
+const vEntryHtml=(x,i)=>`<div class="mres"><div class="hint">第 ${i+1} 題</div><div style="font-size:22px;font-weight:700">${esc(x.en)} <button class="rvsp" data-w="${esc(x.en)}" title="發音">🔊</button></div><div style="margin-top:4px">${esc(x.zh)}${x.pos?'　<span class="hint">('+esc(x.pos)+')</span>':''}</div><div style="margin-top:8px">你的答案：<b style="color:var(--${x.ok?'ok':'no'})">${esc(x.ans)}</b>　${x.ok?'✔ 答對':'✘ 答錯'}</div></div>`;
+function openReview(){
+ const mcq=!$('mcqQuiz').classList.contains('hide');rvKind=mcq?'m':'v';
+ const L=mcq?(M?M.log:[]):log;if(!L.length){alert('還沒有上一題可以回顧。');return}
+ rvIdx=L.length-1;drawReview();$('rvModal').classList.remove('hide')}
+function drawReview(){
+ const L=rvKind==='m'?(M?M.log:[]):log;if(!L.length){closeReview();return}
+ rvIdx=Math.max(0,Math.min(rvIdx,L.length-1));const x=L[rvIdx];
+ $('rvTitle').textContent='回顧第 '+(rvIdx+1)+' 題（目前已作答 '+L.length+' 題）';
+ $('rvBody').innerHTML=rvKind==='m'?mresHtml(x,rvIdx,true):vEntryHtml(x,rvIdx);
+ $('rvOlder').disabled=rvIdx<=0;$('rvNewer').disabled=rvIdx>=L.length-1}
+function closeReview(){const m=document.getElementById('rvModal');if(m)m.classList.add('hide')}
+$('qprev').onclick=openReview;$('mprev').onclick=openReview;
+$('rvClose').onclick=closeReview;$('rvOlder').onclick=()=>{rvIdx--;drawReview()};$('rvNewer').onclick=()=>{rvIdx++;drawReview()};
+$('rvBody').addEventListener('click',e=>{const s=e.target.closest('.rvsp');if(s){speak(s.dataset.w);return}
+ const b=e.target.closest('button[data-rve]');if(b){const x=b.closest('.mres').querySelector('.mexp');x.classList.toggle('hide');b.textContent=x.classList.contains('hide')?'📖 詳解':'📖 收起詳解'}});
+document.addEventListener('keydown',e=>{if($('rvModal').classList.contains('hide'))return;
+ if(e.key==='Escape')closeReview();else if(e.key==='ArrowLeft'){rvIdx--;drawReview()}else if(e.key==='ArrowRight'){rvIdx++;drawReview()}
+ e.stopPropagation()},true);
 // ===== 選擇題測驗 =====
 let M=null;
 const LET=['A','B','C','D','E','F'];
@@ -997,18 +1051,20 @@ document.addEventListener('keydown',e=>{if($('mcqQuiz').classList.contains('hide
  else if(e.key==='Enter'||e.key==='ArrowRight'){e.preventDefault();$('mnext').click()}});
 function finishM(){
  if(!M||!$('mcqResult').classList.contains('hide'))return;
- clearInterval(M.t);clearInterval(M.tt);clearTimeout(M.autoT);show('mcqResult');
+ clearInterval(M.t);clearInterval(M.tt);clearTimeout(M.autoT);show('mcqResult');$('msearch').value='';$('msres').classList.add('hide');
  const total=M.log.length,ok=M.log.filter(x=>x.ok).length,skip=M.log.filter(x=>x.status==='skip'||x.status==='timeout').length;
  $('mstats').innerHTML=`<div class="stat"><b>${total}</b>作答題數</div><div class="stat"><b style="color:var(--ok)">${ok}</b>答對</div><div class="stat"><b style="color:var(--no)">${total-ok}</b>答錯</div><div class="stat"><b>${skip}</b>逾時／略過</div><div class="stat"><b>${total?Math.round(ok/total*100):0}%</b>正確率</div><div class="stat"><b>${String((Date.now()-M.t0)/60000|0).padStart(2,'0')}:${String(((Date.now()-M.t0)/1000|0)%60).padStart(2,'0')}</b>用時</div>${M.list.length>total?`<div class="stat"><b>${M.list.length-total}</b>未作答</div>`:''}`;
  const sw=new Set();M.wrong=M.log.filter(x=>!x.ok&&x.q&&!sw.has(x.q.id)&&sw.add(x.q.id)).map(x=>x.q);
  $('mwrongBtn').classList.toggle('hide',!M.wrong.length);$('mwrongBtn').textContent='只測錯的題目（'+M.wrong.length+'）';
  drawMList()}
+function mresHtml(x,i,rv){const q=x.q;
+ const lab=x.status==='ok'?'<span class="mbadge ok">✔ 答對</span>':x.status==='timeout'?'<span class="mbadge no">⏰ 逾時</span>':x.status==='skip'?'<span class="mbadge no">略過</span>':'<span class="mbadge no">✘ 答錯</span>';
+ const opts=q.o.map((o,k)=>{const l=LET[k];const cls=l===q.a?'ok':l===x.chosen?'no':'';return `<div class="mo ${cls}">${l===q.a?'✔ ':l===x.chosen?'✘ ':''}${esc(o)}</div>`}).join('');
+ const exp=rv?`<div style="margin-top:8px"><button class="sm" data-rve="1">📖 詳解</button></div><div class="mexp hide">${esc(q.e||'（這題沒有詳解）')}</div>`:`<div class="hint" style="margin-top:8px">📖 詳解（中文翻譯）</div><div class="mexp">${esc(q.e||'（這題沒有詳解）')}</div>`;
+ return `<div class="mres"${rv?'':` id="mr${i}"`}><div class="hint">${i+1}. ${esc(q.ref||'')}</div><div>${lab}</div>${q.p!==undefined?`<details style="margin:6px 0"${rv?' open':''}><summary>📄 看文章</summary><div class="mpass">${passHtml(M.c.s,q)}</div></details>`:''}<div class="mq" style="font-size:16px">${esc((q.no!==undefined?q.no+'. ':'')+q.q)}</div>${opts}${exp}</div>`}
 function drawMList(){
  const only=$('monlyW').checked;
- $('mlist').innerHTML=M.log.map((x,i)=>[x,i]).filter(([x])=>!only||!x.ok).map(([x,i])=>{const q=x.q;
-  const lab=x.status==='ok'?'<span class="mbadge ok">✔ 答對</span>':x.status==='timeout'?'<span class="mbadge no">⏰ 逾時</span>':x.status==='skip'?'<span class="mbadge no">略過</span>':'<span class="mbadge no">✘ 答錯</span>';
-  const opts=q.o.map((o,k)=>{const l=LET[k];const cls=l===q.a?'ok':l===x.chosen?'no':'';return `<div class="mo ${cls}">${l===q.a?'✔ ':l===x.chosen?'✘ ':''}${esc(o)}</div>`}).join('');
-  return `<div class="mres"><div class="hint">${i+1}. ${esc(q.ref||'')}</div><div>${lab}</div>${q.p!==undefined?`<details style="margin:6px 0"><summary>📄 看文章</summary><div class="mpass">${passHtml(M.c.s,q)}</div></details>`:''}<div class="mq" style="font-size:16px">${esc((q.no!==undefined?q.no+'. ':'')+q.q)}</div>${opts}<div class="hint" style="margin-top:8px">📖 詳解（中文翻譯）</div><div class="mexp">${esc(q.e||'（這題沒有詳解）')}</div></div>`}).join('')||'<p class="hint">沒有資料</p>'}
+ $('mlist').innerHTML=M.log.map((x,i)=>[x,i]).filter(([x])=>!only||!x.ok).map(([x,i])=>mresHtml(x,i,false)).join('')||'<p class="hint">沒有資料</p>'}
 $('mlist').addEventListener('click',e=>{const b=e.target.closest('button[data-ei]');if(!b)return;const x=$('mx'+b.dataset.ei);x.classList.toggle('hide');b.textContent=x.classList.contains('hide')?'📖 詳解':'📖 收起詳解'});
 $('monlyW').onchange=drawMList;
 $('magain').onclick=()=>runMcq(M.c);
@@ -1058,7 +1114,7 @@ function finish(){
  if(SPELL&&spellOpen)submitSpell(true);
  clearInterval(lcdT);spkTok++;if('speechSynthesis' in window)speechSynthesis.cancel();clearInterval(memT);$('quiz').classList.remove('shuf','flip');if(tm){clearInterval(tm);tm=null}
  if($('result').classList.contains('hide')===false)return;
- asked=-1;show('result');
+ asked=-1;show('result');$('vsearch').value='';$('vsres').classList.add('hide');
  const wrong=log.filter(x=>!x.ok).length,total=log.length;
  const sw=new Set();lastWrong=log.filter(x=>!x.ok&&x.w).map(x=>x.w).filter(w=>{const k=w[0]+'|'+w[1];if(sw.has(k))return false;sw.add(k);return true});
  $('wrongBtn').classList.toggle('hide',!lastWrong.length);$('wrongBtn').textContent='只測錯的單字（'+lastWrong.length+'）';
@@ -1067,7 +1123,7 @@ function finish(){
 function drawRows(){
  const only=$('onlyW').checked,hp=log.some(x=>x.pos),hs=log.some(x=>x.sim),hst=!!(curSet&&log.some(x=>x.w&&badgeOf(curSet,x.w)));
  $('thead').innerHTML='<tr><th>英文</th><th>正確中文</th>'+(hp?'<th>詞性</th>':'')+(hs?'<th>相似字</th>':'')+(hst?'<th>'+(curSet.freq?'出現次數':'重要性')+'</th>':'')+'<th>你的答案</th><th></th></tr>';
- const rows=log.map((x,i)=>[x,i]).filter(([x])=>!only||!x.ok).map(([x,i])=>`<tr><td>${x.en} <button class="spk" data-ri="${i}" title="發音">🔊</button></td><td class="r">${x.zh}</td>${hp?`<td>${x.pos}</td>`:''}${hs?`<td>${x.sim}</td>`:''}${hst?`<td>${x.w?esc(badgeOf(curSet,x.w)):''}</td>`:''}<td class="${x.ok?'r':'w'}">${x.ans}</td><td>${x.ok?'✓':'✗'}</td></tr>`);
+ const rows=log.map((x,i)=>[x,i]).filter(([x])=>!only||!x.ok).map(([x,i])=>`<tr id="vr${i}"><td>${x.en} <button class="spk" data-ri="${i}" title="發音">🔊</button></td><td class="r">${x.zh}</td>${hp?`<td>${x.pos}</td>`:''}${hs?`<td>${x.sim}</td>`:''}${hst?`<td>${x.w?esc(badgeOf(curSet,x.w)):''}</td>`:''}<td class="${x.ok?'r':'w'}">${x.ans}</td><td>${x.ok?'✓':'✗'}</td></tr>`);
  $('rows').innerHTML=rows.join('')||'<tr><td colspan="6">沒有資料</td></tr>'}
 $('onlyW').onchange=drawRows;
 document.addEventListener('click',e=>{const b=e.target.closest('.spk[data-ri]');if(b&&!$('result').classList.contains('hide'))speak(log[+b.dataset.ri].en)});
