@@ -30,6 +30,14 @@ select,button,textarea{font:inherit;color:var(--tx);background:var(--card);borde
 button{cursor:pointer}button.pri{background:var(--pri);color:#fff;border-color:var(--pri);padding:8px 22px;font-weight:600}
 button.sm{padding:3px 10px;font-size:13px}
 .hide{display:none!important}
+#quiz.lr #mtwo{display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:start}
+#quiz.lr #en{grid-template-columns:1fr;gap:8px}
+#quiz.lr #poolWrap{position:sticky;top:6px;max-height:calc(100vh - 12px);max-height:calc(100dvh - 12px);overflow:auto}
+#quiz.lr #pool{grid-template-columns:1fr;margin-top:6px}
+#quiz.lr #poolLab{margin-top:0!important}
+mark{background:#ffe08a;color:#000;border-radius:3px;padding:0 2px}
+.bsr{border:1px solid var(--bd);border-radius:10px;padding:8px 12px;margin:6px 0;background:var(--card)}
+.bsr summary{cursor:pointer}
 .sres{border:1px solid var(--bd);border-radius:10px;max-height:260px;overflow:auto;margin:6px 0;background:var(--card)}
 .sres button{display:block;width:100%;text-align:left;border:none;border-bottom:1px solid var(--bd);border-radius:0;background:transparent;padding:8px 10px;cursor:pointer;font-size:14px;color:var(--tx)}
 .sres button:hover{background:var(--sel)}
@@ -126,10 +134,10 @@ textarea{width:100%;min-height:110px}
 </head>
 <body>
 <div class="wrap">
-<div class="bar"><h1 style="margin:4px 0 12px">📘 英文學習測驗</h1><button id="home" class="hide">🏠 回首頁</button></div>
+<div class="bar"><h1 style="margin:4px 0 12px">📘 英文學習測驗 <small id="appver" style="font-size:12px;color:var(--sub);font-weight:400"></small></h1><button id="home" class="hide">🏠 回首頁</button></div>
 <div id="err" class="panel hide" style="color:var(--no);border-color:var(--no)"></div>
 
-<div id="tabs" class="row" style="margin:0 0 12px"><button class="pri" id="tabV">📘 單字測驗</button><button id="tabM">📝 選擇題測驗</button><button id="tabR">🖼 單字輪播</button></div>
+<div id="tabs" class="row" style="margin:0 0 12px"><button class="pri" id="tabV">📘 單字測驗</button><button id="tabM">📝 選擇題測驗</button><button id="tabR">🖼 單字輪播</button><button id="tabS">🔍 題庫搜尋</button></div>
 
 <div id="setup">
  <div class="panel">
@@ -141,6 +149,7 @@ textarea{width:100%;min-height:110px}
   <div class="cats" id="cats"></div></div>
   <div class="row">
    <label id="gnL" class="hide">測驗組數 <select id="gn"><option value="5">5 組</option><option value="10" selected>10 組</option><option value="20">20 組</option><option value="50">50 組</option><option value="0">全部</option></select></label>
+   <label id="lyL">版面 <select id="layout"><option value="tb">題目在上、答案在下</option><option value="lr">題目在左、答案在右（手機建議）</option></select></label>
    <label id="fdL" class="hide">難度 <select id="fdiff"><option value="0.25">簡單（約挖 25% 字母）</option><option value="0.4" selected>中等（約挖 40%）</option><option value="0.6">困難（約挖 60%）</option><option value="0.8">極難（約挖 80%）</option></select></label>
    <label id="fkL" class="hide"><input type="checkbox" id="fkeep" checked> 保留第一個字母</label>
    <label id="qcL">測驗題數 <select id="qc"><option value="0">不限（看時間）</option><option value="10">10 題</option><option value="20">20 題</option><option value="30">30 題</option><option value="50">50 題</option><option value="all">全部</option></select></label>
@@ -229,6 +238,17 @@ quiet|安靜的|adj.
  </div>
 </div>
 
+<div id="bankSearch" class="hide">
+ <div class="panel">
+  <b>🔍 題庫搜尋</b>
+  <p class="hint">選一個題庫（或全部題庫），輸入英文或中文關鍵字，看看題目或單字是否存在。單字會顯示中文和出處，選擇題點一下可展開題目、答案和詳解。</p>
+  <div class="row" style="margin-top:0"><label>題庫 <select id="bsSel"></select></label><label><input type="checkbox" id="bsWhole"> 英文整字比對（找 act 不會出現 action）</label></div>
+  <input id="bsInput" type="search" placeholder="輸入關鍵字，例如 temporary 或 暫時（可用空格輸入多個關鍵字）" style="width:100%;margin-top:8px">
+  <div id="bsSummary" style="font-weight:700;margin:10px 0 4px"></div>
+  <div id="bsList"></div>
+ </div>
+</div>
+
 <div id="slideSetup" class="hide">
  <div class="panel">
   <b>🖼 單字輪播</b>
@@ -271,9 +291,11 @@ quiet|安靜的|adj.
   <div class="bar"><span id="prog"></span><span id="timer">00:00</span><span><button class="sm" id="qprev" title="回顧上一題（時間照常計算）">◀ 上一題</button> <button class="sm" id="stop">結束測驗</button></span></div>
   <p class="hint" id="qhint"></p>
   <div class="hint" id="memmsg" style="font-weight:700;font-size:15px"></div>
+  <div id="mtwo">
   <div class="grid" id="en"></div>
-  <div class="hint" style="margin-top:12px" id="poolLab"></div>
-  <div id="pool"></div>
+  <div id="poolWrap"><div class="hint" style="margin-top:12px" id="poolLab"></div>
+  <div id="pool"></div></div>
+  </div>
   <div id="posbox" class="hide">
    <div class="grid" id="pgrid"></div>
    <div class="hint" style="margin-top:12px">詞性卡片（可重複使用，拖到單字下方的空格）</div>
@@ -339,6 +361,7 @@ quiet|安靜的|adj.
   <div class="row"><button class="pri" id="again">再測一次</button><button id="wrongBtn" class="hide">只測錯的單字</button><button id="back">回設定</button></div>
  </div>
 </div>
+<p class="hint" id="appfoot" style="text-align:center;margin:18px 0 8px"></p>
 </div>
 
 <div id="rvModal" class="hide"><div class="rv-card">
@@ -349,14 +372,15 @@ quiet|安靜的|adj.
 </div></div>
 
 <script>
+const APP_VERSION='v9',APP_DATE='2026-11-08';
 var SD=document;
 const $=id=>document.getElementById(id)||SD.getElementById(id);
 const shuf=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a};
 var MCQ_SETS=[];let homeTab='v';
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const show=id=>{closeReview();['setup','quiz','result','practice','mcqSetup','mcqQuiz','mcqResult','slideSetup','slidePlay'].forEach(x=>{if(x==='slidePlay'&&typeof RS!=='undefined'&&RS&&RS.win)return;$(x).classList.toggle('hide',x!==id)});document.body.classList.toggle('playing',id==='slidePlay');
- const isSetup=id==='setup'||id==='mcqSetup'||id==='slideSetup';$('home').classList.toggle('hide',isSetup||id==='slidePlay');$('tabs').classList.toggle('hide',!isSetup);
- $('tabV').classList.toggle('pri',homeTab==='v');$('tabM').classList.toggle('pri',homeTab==='mcq');$('tabR').classList.toggle('pri',homeTab==='r')};
+const show=id=>{closeReview();['setup','quiz','result','practice','mcqSetup','mcqQuiz','mcqResult','slideSetup','slidePlay','bankSearch'].forEach(x=>{if(x==='slidePlay'&&typeof RS!=='undefined'&&RS&&RS.win)return;$(x).classList.toggle('hide',x!==id)});document.body.classList.toggle('playing',id==='slidePlay');
+ const isSetup=id==='setup'||id==='mcqSetup'||id==='slideSetup'||id==='bankSearch';$('home').classList.toggle('hide',isSetup||id==='slidePlay');$('tabs').classList.toggle('hide',!isSetup);
+ $('tabV').classList.toggle('pri',homeTab==='v');$('tabM').classList.toggle('pri',homeTab==='mcq');$('tabR').classList.toggle('pri',homeTab==='r');$('tabS').classList.toggle('pri',homeTab==='s')};
 const KIND={word:'單字',phrase:'片語'};
 let SETS=[],SET=null;
 // 單字統一成 [英文,中文,詞性,相似字,題型,群組名]
@@ -379,13 +403,18 @@ function loadAll(){
 function loadMcq(cb){
  const fs=typeof MCQ_FILES!=='undefined'?MCQ_FILES:['mcq-junior.js','mcq-senior.js','mcq-toeic.js','mcq-national-exam.js','mcq-cap.js','mcq-gsat.js'];let i=0;
  const nx=()=>{if(i>=fs.length){cb();return}const f=fs[i++];loadJS(['data/'+f,f],nx,nx)};nx()}
+function showVer(){
+ $('appver').textContent=APP_VERSION;
+ const f=$('appfoot');f.textContent='英文學習測驗 '+APP_VERSION+'（'+APP_DATE+'）';
+ if('caches' in window)caches.keys().then(ks=>{const k=ks.find(x=>x.startsWith('vocab-quiz-'));if(k)f.textContent+='　離線快取 '+k.replace('vocab-quiz-','')}).catch(()=>{})}
 function init(){
+ $('appver').textContent=APP_VERSION;
  SETS=typeof VOCAB_SETS!=='undefined'?VOCAB_SETS:[];
  SETS.forEach(s=>{if(s.stars)s.starMap=buildStarMap(s.id)});
  initMcq();
  if(!SETS.length){err('沒有載入任何題庫，請檢查 index.js 與各題庫檔。');return}
  $('setSel').innerHTML=SETS.map((s,i)=>`<option value="${i}">${s.name}</option>`).join('');
- $('setSel').onchange=drawSet;drawSet();initSlide()}
+ $('setSel').onchange=drawSet;drawSet();initSlide();initBankSearch();showVer()}
 function drawSet(){
  SET=SETS[+$('setSel').value];
  SET.G=SET.groups.map(g=>({name:g.name,items:g.items.map(it=>norm(g,it))}));
@@ -402,7 +431,7 @@ function drawSet(){
  modeUI();$('msg').textContent='';}
 function modeUI(){const bg=!!(SET&&SET.byGroup),pl=!!(SET&&SET.pool),m=$('mode').value,L=m==='listen';
  $('nL').classList.toggle('hide',bg||m==='pos'||L||m==='fill');$('fdL').classList.toggle('hide',m!=='fill');$('fkL').classList.toggle('hide',m!=='fill');$('tL').classList.toggle('hide',m==='mem'||L);$('secL').classList.toggle('hide',m!=='mem');
- $('gnL').classList.toggle('hide',!bg||L);$('catBox').classList.toggle('hide',bg||pl);$('qcL').classList.toggle('hide',bg&&!L)}
+ $('lyL').classList.toggle('hide',['pos','listen','spell','fill'].includes(m));$('gnL').classList.toggle('hide',!bg||L);$('catBox').classList.toggle('hide',bg||pl);$('qcL').classList.toggle('hide',bg&&!L)}
 $('mode').onchange=modeUI;
 loadAll();
 $('all').onclick=()=>document.querySelectorAll('#cats input').forEach(c=>c.checked=true);
@@ -446,7 +475,9 @@ $('start').onclick=()=>{
   const line=infoLine(mt+(rt?'（只測錯題）':''),{rt,byg:BYG,gs,n:words.length,groups:GRtotal,extra:[BYG?null:'題數：'+(TARGET<Infinity?TARGET+' 題':'不限'),(mode==='mem'||mode==='listen')?null:'時間：'+$('t').selectedOptions[0].textContent,mode==='fill'?'難度：'+$('fdiff').selectedOptions[0].textContent.split('（')[0]+($('fkeep').checked?'（保留首字母）':''):null,mode==='mem'?'記憶時間：'+$('sec').value+' 秒':null]});
   $('qinfo').textContent=line;$('rinfo').textContent=line}
  T=mode==='z2e'?1:0;B=1-T;MEM=mode==='mem';clearInterval(memT);$('memmsg').textContent='';
+ const LR=$('layout').value==='lr'&&!posMode&&!LISTEN&&!SPELL&&!FILL;$('quiz').classList.toggle('lr',LR);
  $('qhint').textContent=FILL?'單字會缺少幾個字母，把空格填完整；可以按「發音」聽單字，或按「顯示中文意思」當提示。':SPELL?'看左邊的中文，在右邊輸入英文（不分大小寫）。作答中不會顯示答案，測驗結束後才列出正確答案。':LISTEN?'聽單字發音，從右邊選出正確的中文意思；選完會顯示英文單字讓你驗證。':MEM?'先記住每張英文卡下方的中文答案；時間到後卡片會全部打亂，再把中文拖回正確的英文卡下方。按「結束測驗」可隨時結束。':posMode?'把屬於該單字的詞性拖進它下方的空格（可複選；點已放入的詞性可移除；手機可先點詞性卡再點空格）。完成後按「確認答案」。':T?'將下方英文拖曳到對應中文卡下方（手機可先點英文卡、再點空格）。點已放入的卡片可退回。':'將下方中文翻譯拖曳到對應英文卡下方（手機可先點中文卡、再點空格）。點已放入的卡片可退回。';
+ if(LR&&!MEM)$('qhint').textContent=$('qhint').textContent.replace('將下方','將右邊').replace('卡下方','卡下面');
  ['en','pool','poolLab'].forEach(x=>$(x).classList.toggle('hide',posMode||LISTEN||SPELL||FILL));$('spellbox').classList.toggle('hide',!SPELL);$('fillbox').classList.toggle('hide',!FILL);$('posbox').classList.toggle('hide',!posMode);$('listenbox').classList.toggle('hide',!LISTEN);
  $('poolLab').textContent=T?'英文卡片':'中文翻譯卡片';perPage=Math.min(+$('n').value,words.length);left=+$('t').value;log=[];queue=NOREP?shuf(words):[];asked=0;
  T0=Date.now();show('quiz');if(MEM||LISTEN){$('timer').classList.remove('low');elapsedTick();tm=setInterval(elapsedTick,1000)}else{tick();tm=setInterval(tick,1000)}LISTEN?initListen():FILL?nextFill():SPELL?nextSpell():posMode?nextPosRound():nextRound()};
@@ -869,6 +900,40 @@ function slideBack(closed){
  show('slidePlay')}
 $('slMini').onclick=e=>{e.stopPropagation();slideMini()};
 $('slTheme').onclick=e=>{e.stopPropagation();slideThemeToggle()};
+// ===== 題庫搜尋（首頁）=====
+function initBankSearch(){
+ const keep=$('bsSel').value;
+ let o='<option value="all">全部題庫</option>';
+ if(SETS.length)o+='<optgroup label="單字題庫">'+SETS.map((s,i)=>`<option value="v:${i}">${esc(s.name)}</option>`).join('')+'</optgroup>';
+ const ms=MCQ_SETS.map((s,i)=>[s,i]).filter(([s])=>s.questions&&s.questions.length);
+ if(ms.length)o+='<optgroup label="選擇題題庫">'+ms.map(([s,i])=>`<option value="m:${i}">${esc(s.name)}</option>`).join('')+'</optgroup>';
+ $('bsSel').innerHTML=o;if(keep&&[...$('bsSel').options].some(x=>x.value===keep))$('bsSel').value=keep;bankRun()}
+const rxEsc=s=>s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+function markHtml(text,terms){let t=esc(text);terms.forEach(k=>{if(!k)return;const e=esc(k).replace(/[.*+?^${}()|[\]\\]/g,'\\$&');t=t.replace(new RegExp(e,'gi'),m=>'<mark>'+m+'</mark>')});return t}
+function bankRun(){
+ const raw=$('bsInput').value.trim(),terms=raw.toLowerCase().split(/\s+/).filter(Boolean);
+ if(!terms.length){$('bsSummary').textContent='';$('bsList').innerHTML='';return}
+ const whole=$('bsWhole').checked,sel=$('bsSel').value;
+ const isEn=k=>/^[a-z0-9'’\-\.]+$/i.test(k);
+ const match=text=>terms.every(k=>{const t=text.toLowerCase();if(whole&&isEn(k))return new RegExp("(^|[^a-z0-9])"+rxEsc(k)+"([^a-z0-9]|$)",'i').test(text);return t.includes(k)});
+ const out=[];let total=0;
+ SETS.forEach((s,si)=>{if(sel!=='all'&&sel!=='v:'+si)return;const hits=[];
+  rG(s).forEach(g=>g.items.forEach(w=>{if(match([w[0],w[1],w[2],g.name,(w[6]||[]).join(' ')].join(' ')))hits.push({w,g:g.name})}));
+  if(hits.length){total+=hits.length;out.push(['v',s,hits])}});
+ MCQ_SETS.forEach((s,mi)=>{if(sel!=='all'&&sel!=='m:'+mi)return;if(!s.questions)return;const hits=[];
+  s.questions.forEach(q=>{const t=[q.no||'',q.q,q.o.join(' '),q.e||'',q.ref||'',Object.values(q.f||{}).join(' '),q.p!==undefined&&s.passages?s.passages[q.p]:''].join(' ');if(match(t))hits.push(q)});
+  if(hits.length){total+=hits.length;out.push(['m',s,hits])}});
+ const where=sel==='all'?'全部題庫':$('bsSel').selectedOptions[0].textContent;
+ $('bsSummary').innerHTML=total?`<span style="color:var(--ok)">✔ 在「${esc(where)}」找到 ${total} 筆</span>`+(sel==='all'?'（'+out.map(([k,s,h])=>esc(s.name)+' '+h.length).join('、')+'）':''):`<span style="color:var(--no)">✘ 在「${esc(where)}」沒有找到「${esc(raw)}」</span>`;
+ const LIM=100;
+ $('bsList').innerHTML=out.map(([k,s,hits])=>{
+  const head=`<div class="hint" style="margin-top:12px"><b>${esc(s.name)}</b>：${hits.length} 筆${hits.length>LIM?'（只顯示前 '+LIM+' 筆，請輸入更多關鍵字縮小範圍）':''}</div>`;
+  if(k==='v')return head+hits.slice(0,LIM).map(({w,g})=>`<div class="bsr"><b style="font-size:17px">${markHtml(w[0],terms)}</b> <button class="rvsp" data-w="${esc(w[0])}" title="發音">🔊</button>${w[2]?' <span class="hint">('+esc(w[2])+')</span>':''}<br>${markHtml(w[1],terms)}<br><span class="hint">${esc(g)}${w[7]?'　出現 '+w[7]+' 次'+(w[8]?'（'+esc(w[8])+'）':''):''}</span></div>`).join('');
+  return head+hits.slice(0,LIM).map(q=>{const ai='ABCD'.indexOf(q.a);
+   return `<details class="bsr"><summary>${markHtml((q.no!==undefined?q.no+'. ':'')+q.q.slice(0,90),terms)} <span class="hint">${esc(q.ref||'')}</span></summary>${q.p!==undefined&&s.passages?`<div class="mpass">${esc(s.passages[q.p])}</div>`:''}<div class="mq" style="font-size:16px">${markHtml(q.q,terms)}</div>${q.o.map((o,k)=>`<div class="mo ${'ABCD'[k]===q.a?'ok':''}">${'ABCD'[k]===q.a?'✔ ':''}${markHtml(o,terms)}</div>`).join('')}<div class="mexp">${markHtml(q.e||'（這題沒有詳解）',terms)}</div></details>`}).join('')}).join('')}
+$('bsInput').oninput=bankRun;$('bsSel').onchange=bankRun;$('bsWhole').onchange=bankRun;
+$('bsList').addEventListener('click',e=>{const s=e.target.closest('.rvsp');if(s){e.preventDefault();speak(s.dataset.w)}});
+$('tabS').onclick=()=>{homeTab='s';show('bankSearch');$('bsInput').focus()};
 // ===== 結果頁搜尋、測驗中回顧上一題 =====
 function hl(el){if(!el)return;el.classList.remove('hl');void el.offsetWidth;el.classList.add('hl');setTimeout(()=>el.classList.remove('hl'),2800)}
 function searchBind(inp,box,getList,render,jump){
@@ -1076,7 +1141,7 @@ $('home').onclick=()=>{
  clearInterval(memT);clearInterval(lcdT);spkTok++;if(tm){clearInterval(tm);tm=null}
  if('speechSynthesis' in window)speechSynthesis.cancel();
  $('quiz').classList.remove('shuf','flip');asked=-1;locked=true;
- show(homeTab==='mcq'?'mcqSetup':homeTab==='r'?'slideSetup':'setup');window.scrollTo(0,0)};
+ show(homeTab==='mcq'?'mcqSetup':homeTab==='r'?'slideSetup':homeTab==='s'?'bankSearch':'setup');window.scrollTo(0,0)};
 // ===== 練習模式（不計時、不測驗）=====
 let PP=[],pg=0,zFront=false;
 $('prac').onclick=()=>{
@@ -1159,7 +1224,7 @@ $('ufile').onchange=async e=>{
  if(!n){$('msg').textContent='讀不到單字：請確認格式（每行「英文|中文」，或 CSV 欄位「群組,英文,中文,詞性」），可按「下載格式範本」參考。';return}
  SETS.push({id:'user'+Date.now(),name:'📁 '+r.name,groupLabel:'群組',groups:r.groups});
  $('setSel').innerHTML=SETS.map((s,i)=>`<option value="${i}">${s.name}</option>`).join('');
- $('setSel').value=SETS.length-1;drawSet();initSlide();
+ $('setSel').value=SETS.length-1;drawSet();initSlide();initBankSearch();
  $('msg').textContent='已載入「'+r.name+'」：'+r.groups.length+' 個群組、'+n+' 個單字。檔案只在這個頁面使用，不會上傳。';
  e.target.value=''};
 $('utpl').onclick=()=>{

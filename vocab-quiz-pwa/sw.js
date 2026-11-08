@@ -1,6 +1,6 @@
 // 離線快取：第一次連網開啟時會把全部檔案存到手機裡，之後沒有網路也能使用。
 // 更新題庫或程式後，把下面的版本號加 1（例如 v2），手機下次連網開啟就會重新下載。
-const CACHE = "vocab-quiz-v8";
+const CACHE = "vocab-quiz-v9";
 const FILES = [
  "./",
  "index.html",
