@@ -21,6 +21,7 @@ const FILES = [
  "data/mcq-senior.js",
  "data/mcq-toeic.js",
  "data/national-exam-vocab.js",
+ "data/part2.js",
  "data/phrases-dixson.js",
  "data/senior.js",
  "data/similar.js",
@@ -40,6 +41,8 @@ self.addEventListener("fetch", e => {
   if (req.method !== "GET") return;
   const url = new URL(req.url);
   if (url.origin !== location.origin) return;
+  // 音檔（Part2 資料夾、mp3）檔案很大且需要分段讀取，不放進離線快取，直接走網路
+  if (req.headers.has("range") || /\/Part2\//.test(url.pathname) || /\.(mp3|m4a|wav|ogg)$/i.test(url.pathname)) return;
   const key = new Request(url.origin + url.pathname);
   e.respondWith(caches.open(CACHE).then(async c => {
     const hit = await c.match(key);

@@ -30,6 +30,15 @@ select,button,textarea{font:inherit;color:var(--tx);background:var(--card);borde
 button{cursor:pointer}button.pri{background:var(--pri);color:#fff;border-color:var(--pri);padding:8px 22px;font-weight:600}
 button.sm{padding:3px 10px;font-size:13px}
 .hide{display:none!important}
+.p2row{display:grid;grid-template-columns:26px 34px 1fr 1fr 1fr;gap:8px;align-items:center;margin:9px 0}
+.p2spk{font-size:20px;color:#1d5a4b;visibility:hidden;text-align:center}.p2row.cur .p2spk{visibility:visible}
+.p2no{text-align:right;font-weight:600;color:var(--sub)}
+.p2opt{padding:11px 4px;border:1px solid var(--bd);border-radius:3px;background:var(--card);color:var(--tx);cursor:pointer;font-size:15px}
+.p2row.future .p2opt{opacity:.4;pointer-events:none}.p2row.future .p2no{opacity:.5}
+.p2opt.sel{background:#4a6c64;color:#fff;border-color:#2f4d46}
+.p2opt.ok{background:rgba(31,157,85,.22);border:2px solid var(--ok)}.p2opt.no{background:rgba(217,58,58,.2);border:2px solid var(--no)}
+.p2big{display:grid;grid-template-columns:1fr;gap:8px;margin:10px 0}
+.p2big .p2opt{text-align:left;padding:12px;font-size:16px}
 #quiz.lr #mtwo{display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:start}
 #quiz.lr #en{grid-template-columns:1fr;gap:8px}
 #quiz.lr #poolWrap{position:sticky;top:6px;max-height:calc(100vh - 12px);max-height:calc(100dvh - 12px);overflow:auto}
@@ -137,7 +146,7 @@ textarea{width:100%;min-height:110px}
 <div class="bar"><h1 style="margin:4px 0 12px">📘 英文學習測驗 <small id="appver" style="font-size:12px;color:var(--sub);font-weight:400"></small></h1><button id="home" class="hide">🏠 回首頁</button></div>
 <div id="err" class="panel hide" style="color:var(--no);border-color:var(--no)"></div>
 
-<div id="tabs" class="row" style="margin:0 0 12px"><button class="pri" id="tabV">📘 單字測驗</button><button id="tabM">📝 選擇題測驗</button><button id="tabR">🖼 單字輪播</button><button id="tabS">🔍 題庫搜尋</button></div>
+<div id="tabs" class="row" style="margin:0 0 12px"><button class="pri" id="tabV">📘 單字測驗</button><button id="tabM">📝 選擇題測驗</button><button id="tabR">🖼 單字輪播</button><button id="tabS">🔍 題庫搜尋</button><button id="tabP">🎧 TOEIC 聽力 Part 2</button></div>
 
 <div id="setup">
  <div class="panel">
@@ -225,7 +234,7 @@ quiet|安靜的|adj.
 
 <div id="mcqResult" class="hide">
  <div class="panel">
-  <h2 style="margin-top:0">選擇題測驗結果</h2>
+  <h2 id="mresTitle" style="margin-top:0">選擇題測驗結果</h2>
   <div class="info" id="mrinfo"></div>
   <div class="stats" id="mstats"></div>
  </div>
@@ -237,6 +246,45 @@ quiet|安靜的|adj.
   <div class="row"><button class="pri" id="magain">再測一次</button><button id="mwrongBtn" class="hide">只測錯的題目</button><button id="mback">回設定</button></div>
  </div>
 </div>
+
+<div id="p2Setup" class="hide">
+ <div class="panel">
+  <b>🎧 TOEIC 聽力 Part 2（應答問題）第 7～31 題</b>
+  <p class="hint">模擬考試：先播 Directions，接著第 7 題到第 31 題一次播完，不能暫停或跳題；每題先聽問句，再聽 (A)(B)(C) 三個回答，在答案卡上作答。結束後可看英文文稿、答案與翻譯，並可再聽一次。</p>
+  <div class="row" style="margin-top:0"><label>試卷 <select id="p2exam"></select></label>
+   <label>聲音來源 <select id="p2src"><option value="file">我的音檔（找不到就改用系統語音）</option><option value="tts">系統語音</option></select></label></div>
+  <div class="row"><label>語速 <select id="p2rate"><option>0.9</option><option selected>1.0</option><option>1.1</option><option>1.2</option><option>1.3</option><option>1.4</option><option>1.5</option><option>1.6</option><option>1.7</option><option>1.8</option><option>1.9</option><option>2.0</option></select></label>
+   <label>題間間隔（系統語音用） <select id="p2gap"><option value="3">3 秒</option><option value="5" selected>5 秒</option><option value="8">8 秒</option><option value="10">10 秒</option></select></label></div>
+  <div class="row"><label>系統語音引擎 <select id="p2eng"></select></label>
+   <label>口音 <select id="p2acc"><option value="en-US">美式</option><option value="en-GB">英式</option><option value="en-AU">澳洲</option></select></label>
+   <label>語音 <select id="p2vsel"></select></label><button class="sm" id="p2vtest">試聽</button></div>
+  <div class="hint" id="p2voiceInfo"></div>
+  <div class="row"><button class="pri" id="p2start">▶ 開始測驗</button><button id="p2practice">練習模式</button></div>
+  <p class="hint" id="p2msg"></p>
+  <p class="hint">口音、引擎只有「系統語音」會用到；我的音檔（Part2 資料夾）要和 index.html 放在同一層。音檔內已含約 5 秒作答間隔，不另外加間隔。語速也會套用在我的音檔上。</p>
+ </div>
+</div>
+
+<div id="p2Test" class="hide">
+ <div class="panel">
+  <div class="info" id="p2info"></div>
+  <div class="bar"><span id="p2status" style="font-weight:700"></span><span id="p2timer" style="font-size:20px;font-variant-numeric:tabular-nums"></span><button class="sm" id="p2stop">結束測驗（交卷）</button></div>
+  <div class="hint">不能暫停或跳題；點選答案，灰色的題目還沒播到。可以修改已經播過的題目的答案。</div>
+  <div id="p2sheet"></div>
+ </div>
+</div>
+
+<div id="p2Practice" class="hide">
+ <div class="panel">
+  <div class="info" id="p2pinfo"></div>
+  <div class="bar"><b id="p2pno"></b><button class="sm" id="p2pfinish">結束練習並看結果</button></div>
+  <div class="row" style="margin-top:0"><label><input type="checkbox" id="p2pText"> 顯示英文文稿</label><label><input type="checkbox" id="p2pZh"> 顯示中文翻譯</label><label><input type="checkbox" id="p2pAuto" checked> 切換題目時自動播放</label></div>
+  <div id="p2pbox"></div>
+  <div class="row" style="justify-content:center"><button id="p2pPrev">◀ 上一題</button><button class="pri" id="p2pPlay">🔊 播放</button><button id="p2pNext">下一題 ▶</button></div>
+  <div class="row" style="justify-content:center"><button class="sm" id="p2pDir">播放 Directions（說明）</button></div>
+ </div>
+</div>
+<audio id="p2audio" preload="auto" playsinline></audio>
 
 <div id="bankSearch" class="hide">
  <div class="panel">
@@ -372,15 +420,15 @@ quiet|安靜的|adj.
 </div></div>
 
 <script>
-const APP_VERSION='v9',APP_DATE='2026-11-08';
+const APP_VERSION='v10',APP_DATE='2026-11-09';
 var SD=document;
 const $=id=>document.getElementById(id)||SD.getElementById(id);
 const shuf=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a};
-var MCQ_SETS=[];let homeTab='v';
+var MCQ_SETS=[],PART2_EXAMS=[];let homeTab='v';
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const show=id=>{closeReview();['setup','quiz','result','practice','mcqSetup','mcqQuiz','mcqResult','slideSetup','slidePlay','bankSearch'].forEach(x=>{if(x==='slidePlay'&&typeof RS!=='undefined'&&RS&&RS.win)return;$(x).classList.toggle('hide',x!==id)});document.body.classList.toggle('playing',id==='slidePlay');
- const isSetup=id==='setup'||id==='mcqSetup'||id==='slideSetup'||id==='bankSearch';$('home').classList.toggle('hide',isSetup||id==='slidePlay');$('tabs').classList.toggle('hide',!isSetup);
- $('tabV').classList.toggle('pri',homeTab==='v');$('tabM').classList.toggle('pri',homeTab==='mcq');$('tabR').classList.toggle('pri',homeTab==='r');$('tabS').classList.toggle('pri',homeTab==='s')};
+const show=id=>{closeReview();['setup','quiz','result','practice','mcqSetup','mcqQuiz','mcqResult','slideSetup','slidePlay','bankSearch','p2Setup','p2Test','p2Practice'].forEach(x=>{if(x==='slidePlay'&&typeof RS!=='undefined'&&RS&&RS.win)return;$(x).classList.toggle('hide',x!==id)});document.body.classList.toggle('playing',id==='slidePlay');
+ const isSetup=id==='setup'||id==='mcqSetup'||id==='slideSetup'||id==='bankSearch'||id==='p2Setup';$('home').classList.toggle('hide',isSetup||id==='slidePlay');$('tabs').classList.toggle('hide',!isSetup);
+ $('tabV').classList.toggle('pri',homeTab==='v');$('tabM').classList.toggle('pri',homeTab==='mcq');$('tabR').classList.toggle('pri',homeTab==='r');$('tabS').classList.toggle('pri',homeTab==='s');$('tabP').classList.toggle('pri',homeTab==='p')};
 const KIND={word:'單字',phrase:'片語'};
 let SETS=[],SET=null;
 // 單字統一成 [英文,中文,詞性,相似字,題型,群組名]
@@ -401,7 +449,7 @@ function loadAll(){
    const f=files[i++];loadJS(['data/'+f,f],next,()=>{if(listed.includes(f))err('找不到題庫檔 '+f+'。');next()})};
   next()},()=>{err('找不到 index.js。請把 data 資料夾（內含 index.js、toeic.js…）放在 vocab-quiz.html 旁邊，或把這些 .js 檔直接放在同一個資料夾。')})}
 function loadMcq(cb){
- const fs=typeof MCQ_FILES!=='undefined'?MCQ_FILES:['mcq-junior.js','mcq-senior.js','mcq-toeic.js','mcq-national-exam.js','mcq-cap.js','mcq-gsat.js'];let i=0;
+ const fs=typeof MCQ_FILES!=='undefined'?MCQ_FILES:['mcq-junior.js','mcq-senior.js','mcq-toeic.js','mcq-national-exam.js','mcq-cap.js','mcq-gsat.js','part2.js'];let i=0;
  const nx=()=>{if(i>=fs.length){cb();return}const f=fs[i++];loadJS(['data/'+f,f],nx,nx)};nx()}
 function showVer(){
  $('appver').textContent=APP_VERSION;
@@ -414,7 +462,7 @@ function init(){
  initMcq();
  if(!SETS.length){err('沒有載入任何題庫，請檢查 index.js 與各題庫檔。');return}
  $('setSel').innerHTML=SETS.map((s,i)=>`<option value="${i}">${s.name}</option>`).join('');
- $('setSel').onchange=drawSet;drawSet();initSlide();initBankSearch();showVer()}
+ $('setSel').onchange=drawSet;drawSet();initSlide();initBankSearch();initP2();showVer()}
 function drawSet(){
  SET=SETS[+$('setSel').value];
  SET.G=SET.groups.map(g=>({name:g.name,items:g.items.map(it=>norm(g,it))}));
@@ -568,7 +616,7 @@ function bindVS(selId,langId,testId){
  const sel=$(selId),ls=$(langId);
  sel.onchange=()=>{const L=ls.value.toLowerCase();if(sel.value)VPREF[L]=sel.value;else delete VPREF[L];savePref();refreshVoiceUI();showVoice()};
  $(testId).onclick=()=>speak('Hello! This is how I sound. Nice to meet you.',ls.value,.9)}
-function loadVoices(){if('speechSynthesis' in window){VOICES=speechSynthesis.getVoices();showVoice()}}
+function loadVoices(){if('speechSynthesis' in window){VOICES=speechSynthesis.getVoices();showVoice();if(typeof refreshP2Voices==='function')refreshP2Voices()}}
 if('speechSynthesis' in window){speechSynthesis.onvoiceschanged=loadVoices;}
 loadVoices();$('acc').onchange=showVoice;$('lacc').onchange=()=>{showLVoice();refreshVoiceUI()};$('racc').onchange=refreshVoiceUI;bindVS('vsel','acc','vtest');bindVS('rvsel','racc','rvtest');bindVS('lvsel','lacc','lvtest');
 const curLang=()=>LISTEN?$('lacc').value:$('acc').value,curRate=()=>LISTEN?+$('lrate').value:.9;
@@ -900,6 +948,149 @@ function slideBack(closed){
  show('slidePlay')}
 $('slMini').onclick=e=>{e.stopPropagation();slideMini()};
 $('slTheme').onclick=e=>{e.stopPropagation();slideThemeToggle()};
+// ===== TOEIC 聽力 Part 2 =====
+const P2DIR='Part 2. Directions: You will hear a question or statement and three responses spoken in English. They will not be printed in your test book and will be spoken only one time. Select the best response to each question and mark the letter, A, B, or C, on your answer sheet.';
+let P2={tok:0,exam:null,ans:{},cur:-1,mode:'',t0:0,iv:null,track:null,timers:new Set(),abort:null,usedTts:false,pi:0,playing:false};
+function famOf(v){return /google/i.test(v.name)?'Google':/microsoft/i.test(v.name)?'Microsoft':(/com\.apple/i.test(v.voiceURI||'')||/^(Samantha|Alex|Daniel|Karen|Moira|Tessa|Fiona|Allison|Ava|Evan|Nicky|Aaron|Susan|Tom|Siri|Serena|Oliver|Kate|Martha|Arthur|Rishi|Lee|Catherine|Gordon)\b/i.test(v.name))?'Apple':'其他'}
+function vq(v){return /premium/i.test(v.name+' '+v.voiceURI)?3:/enhanced|natural|neural|siri/i.test(v.name+' '+v.voiceURI)?2:1}
+function p2VoiceList(){const acc=$('p2acc').value.toLowerCase(),eng=$('p2eng').value;return VOICES.filter(v=>v.lang.replace('_','-').toLowerCase()===acc&&(eng==='auto'||famOf(v)===eng))}
+function p2Pick(){const vs=p2VoiceList(),sel=$('p2vsel').value,ch=sel&&vs.find(v=>v.voiceURI===sel);if(ch)return ch;return vs.slice().sort((a,b)=>vq(b)-vq(a))[0]||pickVoice($('p2acc').value)}
+function refreshP2Voices(){
+ if(!$('p2eng'))return;
+ const en=VOICES.filter(v=>/^en/i.test(v.lang)),fams=[...new Set(en.map(famOf))].filter(f=>f!=='其他'||en.some(v=>famOf(v)==='其他'));
+ const keepE=$('p2eng').value;$('p2eng').innerHTML='<option value="auto">自動（系統推薦）</option>'+fams.map(f=>`<option value="${f}">${f==='Apple'?'Apple 語音':f==='Google'?'Google 語音':f==='Microsoft'?'Microsoft 語音':'其他語音'}</option>`).join('');
+ if(keepE&&[...$('p2eng').options].some(o=>o.value===keepE))$('p2eng').value=keepE;
+ const vs=p2VoiceList(),keepV=$('p2vsel').value;
+ $('p2vsel').innerHTML='<option value="">自動</option>'+vs.map(v=>`<option value="${esc(v.voiceURI)}">${esc(v.name)}</option>`).join('');
+ if(keepV&&vs.some(v=>v.voiceURI===keepV))$('p2vsel').value=keepV;
+ const v=p2Pick();$('p2voiceInfo').textContent=v?'系統語音會使用：'+v.name+'（'+v.lang+'，'+famOf(v)+'）':'⚠ 這台裝置找不到符合的系統語音，會使用預設語音（口音可能不同）'}
+function initP2(){
+ if(!$('p2exam'))return;
+ $('p2exam').innerHTML=PART2_EXAMS.length?PART2_EXAMS.map(e=>`<option value="${esc(e.id)}">${esc(e.label)}</option>`).join(''):'<option>（沒有載入 Part 2 題庫）</option>';
+ refreshP2Voices()}
+$('p2eng').onchange=refreshP2Voices;$('p2acc').onchange=refreshP2Voices;$('p2vsel').onchange=refreshP2Voices;
+$('tabP').onclick=()=>{homeTab='p';show('p2Setup')};
+function p2Cfg(){return {rate:+$('p2rate').value,useFile:$('p2src').value==='file',gap:+$('p2gap').value}}
+const p2Wait=ms=>new Promise(res=>{const id=setTimeout(()=>{P2.timers.delete(id);res()},ms);P2.timers.add(id)});
+function p2Speak(text,rate,tok){return new Promise(res=>{
+ if(!('speechSynthesis' in window)||tok!==P2.tok){res();return}
+ if(!VOICES.length)VOICES=speechSynthesis.getVoices();
+ const u=new SpeechSynthesisUtterance(text),v=p2Pick();u.rate=Math.min(rate,2);
+ if(v){u.voice=v;u.lang=v.lang}else u.lang=$('p2acc').value;
+ u.onend=u.onerror=()=>res();speechSynthesis.speak(u)})}
+async function p2TtsQuestion(q,rate,tok){
+ const seq=['Number '+q.no+'.',q.q];q.o.forEach((o,i)=>{seq.push('ABC'[i]+'.');seq.push(o.replace(/^\([ABC]\)\s*/,''))});
+ for(const t of seq){if(tok!==P2.tok)return;await p2Speak(t,rate,tok);if(tok!==P2.tok)return;await p2Wait(380/rate)}}
+function p2PlayFile(url,rate,tok,from,to){return new Promise(res=>{
+ const au=$('p2audio');let done=false,started=false,poll=null,tm=null;
+ const fin=ok=>{if(done)return;done=true;clearInterval(poll);clearTimeout(tm);au.onended=au.onerror=au.onplaying=au.onloadedmetadata=null;if(P2.abort===ab)P2.abort=null;res(ok)};
+ const ab=()=>{try{au.pause()}catch(e){}fin(false)};
+ P2.abort=ab;
+ tm=setTimeout(()=>{if(!started){try{au.pause()}catch(e){}fin(false)}},9000);
+ au.onerror=()=>fin(false);au.onended=()=>fin(true);
+ au.onplaying=()=>{started=true;au.playbackRate=rate};
+ au.onloadedmetadata=()=>{if(from){try{au.currentTime=from}catch(e){}}};
+ if(to!=null)poll=setInterval(()=>{if(started&&au.currentTime>=to){try{au.pause()}catch(e){}fin(true)}},100);
+ au.src=url;try{au.preservesPitch=true}catch(e){}au.defaultPlaybackRate=rate;au.playbackRate=rate;
+ const pr=au.play();if(pr&&pr.catch)pr.catch(()=>fin(false))})}
+function p2Stop(){
+ P2.tok++;P2.timers.forEach(clearTimeout);P2.timers.clear();clearInterval(P2.iv);clearInterval(P2.track);
+ if(P2.abort)try{P2.abort()}catch(e){}
+ try{$('p2audio').pause()}catch(e){}
+ if('speechSynthesis' in window)speechSynthesis.cancel();
+ P2.playing=false;const pb=$('p2pPlay');if(pb)pb.textContent='🔊 播放'}
+function p2Status(t){$('p2status').textContent=t+(P2.usedTts?'（部分使用系統語音）':'')}
+function p2SetCur(i){
+ P2.cur=i;document.querySelectorAll('#p2sheet .p2row').forEach(r=>{const k=+r.dataset.k;r.classList.toggle('cur',k===i);r.classList.toggle('future',k>i)})}
+function p2BuildSheet(){
+ $('p2sheet').innerHTML=P2.exam.questions.map((q,k)=>`<div class="p2row future" data-k="${k}"><span class="p2spk">🔊</span><span class="p2no">${q.no}.</span>${'ABC'.split('').map(l=>`<button class="p2opt${P2.ans[q.no]===l?' sel':''}" data-k="${k}" data-l="${l}">(${l})</button>`).join('')}</div>`).join('')}
+$('p2sheet').addEventListener('click',e=>{
+ const b=e.target.closest('.p2opt');if(!b)return;const k=+b.dataset.k;if(k>P2.cur)return;
+ const q=P2.exam.questions[k];P2.ans[q.no]=b.dataset.l;
+ b.parentElement.querySelectorAll('.p2opt').forEach(x=>x.classList.toggle('sel',x===b))});
+function p2Prime(){try{if('speechSynthesis' in window){const u=new SpeechSynthesisUtterance('.');u.volume=0;speechSynthesis.speak(u)}}catch(e){}}
+function p2Begin(mode){
+ const ex=PART2_EXAMS.find(e=>e.id===$('p2exam').value);if(!ex){$('p2msg').textContent='沒有載入 Part 2 題庫（請確認 data/part2.js）。';return false}
+ p2Stop();P2.exam=ex;P2.ans={};P2.cur=-1;P2.mode=mode;P2.usedTts=false;P2.t0=Date.now();homeTab='p';
+ const c=p2Cfg();P2.cfg=c;
+ P2.info=['TOEIC 聽力 Part 2',ex.label,'聲音：'+(c.useFile?'我的音檔（找不到時用系統語音）':'系統語音 '+$('p2acc').selectedOptions[0].textContent),'語速 '+c.rate.toFixed(1)+'×'].join('　｜　');
+ $('p2msg').textContent='';return true}
+// ---------- 測驗模式
+$('p2start').onclick=()=>{
+ if(!p2Begin('test'))return;p2Prime();
+ $('p2info').textContent=P2.info;p2BuildSheet();show('p2Test');
+ $('p2timer').textContent='已用 00:00';P2.iv=setInterval(()=>{$('p2timer').textContent='已用 '+fmtT((Date.now()-P2.t0)/1000|0)},1000);
+ p2RunTest(P2.tok)};
+async function p2Directions(tok,c,useFile){
+ p2SetCur(-1);p2Status('正在播放：Directions（說明）');
+ if(useFile&&P2.exam.directions){const ok=await p2PlayFile(P2.exam.directions,c.rate,tok);if(tok!==P2.tok)return;if(ok)return;P2.usedTts=true}
+ await p2Speak(P2DIR,c.rate,tok)}
+async function p2OneQuestion(i,tok,c,useFile){
+ const q=P2.exam.questions[i];p2SetCur(i);p2Status('正在播放：第 '+q.no+' 題');
+ if(useFile&&q.audio){const ok=await p2PlayFile(q.audio,c.rate,tok);if(tok!==P2.tok)return;if(ok)return}
+ P2.usedTts=true;await p2TtsQuestion(q,c.rate,tok);if(tok!==P2.tok)return;await p2Wait(c.gap*1000)}
+async function p2RunTest(tok){
+ const ex=P2.exam,c=P2.cfg;let useFile=c.useFile;
+ if(ex.kind==='whole'&&useFile){
+  p2SetCur(-1);p2Status('正在播放：Directions（說明）');
+  P2.track=setInterval(()=>{const t=$('p2audio').currentTime;let k=-1;for(let i=0;i<ex.starts.length;i++)if(t>=ex.starts[i]-0.05)k=i;if(k!==P2.cur){p2SetCur(k);p2Status(k<0?'正在播放：Directions（說明）':'正在播放：第 '+ex.questions[k].no+' 題')}},200);
+  const ok=await p2PlayFile(ex.file,c.rate,tok);clearInterval(P2.track);if(tok!==P2.tok)return;
+  if(ok){p2SetCur(ex.questions.length-1);p2Status('播放完畢');await p2Wait(2500);if(tok!==P2.tok)return;p2Finish();return}
+  useFile=false;P2.usedTts=true}
+ await p2Directions(tok,c,useFile);if(tok!==P2.tok)return;
+ for(let i=0;i<ex.questions.length;i++){await p2OneQuestion(i,tok,c,useFile);if(tok!==P2.tok)return}
+ p2Status('播放完畢');await p2Wait(1500);if(tok!==P2.tok)return;p2Finish()}
+$('p2stop').onclick=()=>{if(!confirm('要現在交卷、結束測驗嗎？尚未播到的題目會算沒作答。'))return;p2Finish()};
+// ---------- 結果（沿用選擇題的結果頁）
+const p2Explain=q=>'【問句中譯】'+q.zh+'\n【選項翻譯】\n'+q.o.map((o,i)=>o+'　＝　'+q.ozh[i]).join('\n');
+function p2Finish(){
+ const ex=P2.exam;p2Stop();
+ const log=ex.questions.map((q,i)=>{const ch=P2.ans[q.no]||null;return {q:{id:'P2_'+ex.id+'_'+q.no,no:q.no,q:q.q,o:q.o,a:q.a,e:p2Explain(q),ref:'TOEIC 聽力 Part 2｜'+ex.label,p2:{ex:ex.id,i}},chosen:ch,ok:ch===q.a,status:!ch?'skip':ch===q.a?'ok':'wrong'}});
+ M={c:{s:{name:'TOEIC 聽力 Part 2'},info:P2.info,time:0,total:0,p2:{mode:P2.mode}},list:log.map(x=>x.q),log,i:0,t:null,tt:null,autoT:null,cur:null,left:0,t0:P2.t0,wrong:[]};
+ $('mrinfo').textContent=P2.info;
+ if(P2.mode==='practice'){M.list=log.filter(x=>x.chosen).map(x=>x.q);M.log=log.filter(x=>x.chosen)}
+ $('mcqResult').classList.add('hide');finishM()}
+function p2Again(){show('p2Setup');$('p2start').click()}
+// 結果頁「再聽一次」
+async function p2Replay(exId,i){
+ const ex=PART2_EXAMS.find(e=>e.id===exId);if(!ex)return;
+ P2.exam=ex;const tok=(p2Stop(),++P2.tok);const c=p2Cfg();const q=ex.questions[i];
+ if(c.useFile){
+  if(ex.kind==='whole'){const ok=await p2PlayFile(ex.file,c.rate,tok,Math.max(0,ex.starts[i]-0.15),ex.ends[i]+0.3);if(tok!==P2.tok||ok)return}
+  else if(q.audio){const ok=await p2PlayFile(q.audio,c.rate,tok);if(tok!==P2.tok||ok)return}}
+ await p2TtsQuestion(q,c.rate,tok)}
+$('mlist').addEventListener('click',e=>{const b=e.target.closest('.p2re');if(b)p2Replay(b.dataset.ex,+b.dataset.i)});
+// ---------- 練習模式
+$('p2practice').onclick=()=>{
+ if(!p2Begin('practice'))return;p2Prime();
+ P2.pi=0;P2.cur=P2.exam.questions.length-1;$('p2pinfo').textContent=P2.info;show('p2Practice');p2pShow(0,true)};
+function p2pShow(i,auto){
+ const ex=P2.exam,n=ex.questions.length;i=Math.max(0,Math.min(n-1,i));P2.pi=i;const q=ex.questions[i];
+ $('p2pno').textContent='第 '+q.no+' 題（'+(i+1)+' / '+n+'）';
+ const showT=$('p2pText').checked,showZ=$('p2pZh').checked,ch=P2.ans[q.no];
+ $('p2pbox').innerHTML=(showT?`<div class="mq" style="font-size:18px">${esc(q.q)}</div>`:'')+(showZ?`<div class="hint" style="font-size:15px">${esc(q.zh)}</div>`:'')+
+  `<div class="p2big">${q.o.map((o,k)=>{const L='ABC'[k];let cls='';if(ch){cls=L===q.a?' ok':L===ch?' no':''}return `<button class="p2opt${cls}" data-l="${L}">${showT?esc(o):'('+L+')'}${showZ?'<div class="hint" style="font-size:13px">'+esc(q.ozh[k])+'</div>':''}</button>`}).join('')}</div>`+
+  (ch?`<div style="font-weight:700;color:var(--${ch===q.a?'ok':'no'})">${ch===q.a?'✔ 答對了':'✘ 答錯了，正確答案是 ('+q.a+')'}</div>`:'');
+ $('p2pPrev').disabled=i<=0;$('p2pNext').disabled=i>=n-1;
+ if(auto&&$('p2pAuto').checked)p2pPlay()}
+$('p2pbox').addEventListener('click',e=>{const b=e.target.closest('.p2opt');if(!b)return;const q=P2.exam.questions[P2.pi];P2.ans[q.no]=b.dataset.l;p2pShow(P2.pi,false)});
+$('p2pText').onchange=$('p2pZh').onchange=()=>p2pShow(P2.pi,false);
+$('p2pPrev').onclick=()=>{p2Stop();p2pShow(P2.pi-1,true)};
+$('p2pNext').onclick=()=>{p2Stop();p2pShow(P2.pi+1,true)};
+async function p2pPlay(){
+ if(P2.playing){p2Stop();return}
+ const ex=P2.exam,i=P2.pi,q=ex.questions[i],c=p2Cfg();const tok=(p2Stop(),++P2.tok);P2.playing=true;$('p2pPlay').textContent='⏹ 停止';
+ const end=()=>{if(tok===P2.tok){P2.playing=false;$('p2pPlay').textContent='🔊 播放'}};
+ if(c.useFile){
+  if(ex.kind==='whole'){const ok=await p2PlayFile(ex.file,c.rate,tok,Math.max(0,ex.starts[i]-0.15),ex.ends[i]+0.3);if(tok!==P2.tok)return;if(ok){end();return}}
+  else if(q.audio){const ok=await p2PlayFile(q.audio,c.rate,tok);if(tok!==P2.tok)return;if(ok){end();return}}}
+ await p2TtsQuestion(q,c.rate,tok);end()}
+$('p2pPlay').onclick=p2pPlay;
+$('p2pDir').onclick=async()=>{const ex=P2.exam,c=p2Cfg();const tok=(p2Stop(),++P2.tok);
+ if(c.useFile&&ex.directions){const ok=await p2PlayFile(ex.directions,c.rate,tok);if(tok!==P2.tok||ok)return}
+ await p2Speak(P2DIR,c.rate,tok)};
+$('p2pfinish').onclick=()=>{if(!Object.keys(P2.ans).length&&!confirm('還沒有作答任何題目，要直接看結果嗎？'))return;p2Finish()};
+$('p2vtest').onclick=async()=>{const tok=(p2Stop(),++P2.tok);P2.exam=PART2_EXAMS[0]||P2.exam;await p2Speak('Number 7. Who will print the financial statements?',+$('p2rate').value,tok)};
 // ===== 題庫搜尋（首頁）=====
 function initBankSearch(){
  const keep=$('bsSel').value;
@@ -1120,28 +1311,29 @@ function finishM(){
  const total=M.log.length,ok=M.log.filter(x=>x.ok).length,skip=M.log.filter(x=>x.status==='skip'||x.status==='timeout').length;
  $('mstats').innerHTML=`<div class="stat"><b>${total}</b>作答題數</div><div class="stat"><b style="color:var(--ok)">${ok}</b>答對</div><div class="stat"><b style="color:var(--no)">${total-ok}</b>答錯</div><div class="stat"><b>${skip}</b>逾時／略過</div><div class="stat"><b>${total?Math.round(ok/total*100):0}%</b>正確率</div><div class="stat"><b>${String((Date.now()-M.t0)/60000|0).padStart(2,'0')}:${String(((Date.now()-M.t0)/1000|0)%60).padStart(2,'0')}</b>用時</div>${M.list.length>total?`<div class="stat"><b>${M.list.length-total}</b>未作答</div>`:''}`;
  const sw=new Set();M.wrong=M.log.filter(x=>!x.ok&&x.q&&!sw.has(x.q.id)&&sw.add(x.q.id)).map(x=>x.q);
- $('mwrongBtn').classList.toggle('hide',!M.wrong.length);$('mwrongBtn').textContent='只測錯的題目（'+M.wrong.length+'）';
+ $('mresTitle').textContent=M.c&&M.c.p2?'TOEIC 聽力 Part 2 測驗結果':'選擇題測驗結果';$('mwrongBtn').classList.toggle('hide',!M.wrong.length||!!(M.c&&M.c.p2));$('mwrongBtn').textContent='只測錯的題目（'+M.wrong.length+'）';
  drawMList()}
 function mresHtml(x,i,rv){const q=x.q;
  const lab=x.status==='ok'?'<span class="mbadge ok">✔ 答對</span>':x.status==='timeout'?'<span class="mbadge no">⏰ 逾時</span>':x.status==='skip'?'<span class="mbadge no">略過</span>':'<span class="mbadge no">✘ 答錯</span>';
  const opts=q.o.map((o,k)=>{const l=LET[k];const cls=l===q.a?'ok':l===x.chosen?'no':'';return `<div class="mo ${cls}">${l===q.a?'✔ ':l===x.chosen?'✘ ':''}${esc(o)}</div>`}).join('');
  const exp=rv?`<div style="margin-top:8px"><button class="sm" data-rve="1">📖 詳解</button></div><div class="mexp hide">${esc(q.e||'（這題沒有詳解）')}</div>`:`<div class="hint" style="margin-top:8px">📖 詳解（中文翻譯）</div><div class="mexp">${esc(q.e||'（這題沒有詳解）')}</div>`;
- return `<div class="mres"${rv?'':` id="mr${i}"`}><div class="hint">${i+1}. ${esc(q.ref||'')}</div><div>${lab}</div>${q.p!==undefined?`<details style="margin:6px 0"${rv?' open':''}><summary>📄 看文章</summary><div class="mpass">${passHtml(M.c.s,q)}</div></details>`:''}<div class="mq" style="font-size:16px">${esc((q.no!==undefined?q.no+'. ':'')+q.q)}</div>${opts}${exp}</div>`}
+ return `<div class="mres"${rv?'':` id="mr${i}"`}><div class="hint">${i+1}. ${esc(q.ref||'')}</div><div>${lab}</div>${q.p2?`<div style="margin:4px 0"><button class="sm p2re" data-ex="${esc(q.p2.ex)}" data-i="${q.p2.i}">🔊 再聽一次</button></div>`:''}${q.p!==undefined?`<details style="margin:6px 0"${rv?' open':''}><summary>📄 看文章</summary><div class="mpass">${passHtml(M.c.s,q)}</div></details>`:''}<div class="mq" style="font-size:16px">${esc((q.no!==undefined?q.no+'. ':'')+q.q)}</div>${opts}${exp}</div>`}
 function drawMList(){
  const only=$('monlyW').checked;
  $('mlist').innerHTML=M.log.map((x,i)=>[x,i]).filter(([x])=>!only||!x.ok).map(([x,i])=>mresHtml(x,i,false)).join('')||'<p class="hint">沒有資料</p>'}
 $('mlist').addEventListener('click',e=>{const b=e.target.closest('button[data-ei]');if(!b)return;const x=$('mx'+b.dataset.ei);x.classList.toggle('hide');b.textContent=x.classList.contains('hide')?'📖 詳解':'📖 收起詳解'});
 $('monlyW').onchange=drawMList;
-$('magain').onclick=()=>runMcq(M.c);
+$('magain').onclick=()=>{if(M&&M.c&&M.c.p2){p2Again()}else runMcq(M.c)};
 $('mwrongBtn').onclick=()=>{if(!M.wrong.length)return;const c=M.c;runMcq({s:c.s,pool:M.wrong.slice(),target:M.wrong.length,time:c.time,info:c.info+'（只測錯題）'})};
-$('mback').onclick=()=>{homeTab='mcq';show('mcqSetup')};
+$('mback').onclick=()=>{if(M&&M.c&&M.c.p2){homeTab='p';show('p2Setup')}else{homeTab='mcq';show('mcqSetup')}};
 $('home').onclick=()=>{
- if((!$('quiz').classList.contains('hide')||!$('mcqQuiz').classList.contains('hide'))&&!confirm('要離開並放棄目前的測驗嗎？'))return;
+ if((!$('quiz').classList.contains('hide')||!$('mcqQuiz').classList.contains('hide')||!$('p2Test').classList.contains('hide')||!$('p2Practice').classList.contains('hide'))&&!confirm('要離開並放棄目前的測驗嗎？'))return;
+ p2Stop();
  if(M){clearInterval(M.t);clearTimeout(M.autoT);clearInterval(M.tt)}
  clearInterval(memT);clearInterval(lcdT);spkTok++;if(tm){clearInterval(tm);tm=null}
  if('speechSynthesis' in window)speechSynthesis.cancel();
  $('quiz').classList.remove('shuf','flip');asked=-1;locked=true;
- show(homeTab==='mcq'?'mcqSetup':homeTab==='r'?'slideSetup':homeTab==='s'?'bankSearch':'setup');window.scrollTo(0,0)};
+ show(homeTab==='mcq'?'mcqSetup':homeTab==='r'?'slideSetup':homeTab==='s'?'bankSearch':homeTab==='p'?'p2Setup':'setup');window.scrollTo(0,0)};
 // ===== 練習模式（不計時、不測驗）=====
 let PP=[],pg=0,zFront=false;
 $('prac').onclick=()=>{
