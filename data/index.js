@@ -22,4 +22,5 @@ const MCQ_FILES = [
   "mcq-national-exam.js", // 國家考試三等英文（高考／地特／關務）
   "mcq-cap.js", // 國中會考英語歷屆試題（108~115年）
   "mcq-gsat.js", // 大學學測詞彙題（100~115年）
+  "part2.js", // TOEIC 聽力 Part 2（12 份試卷）
 ];
