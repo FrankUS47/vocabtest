@@ -1,5 +1,6 @@
 // ===== 單字題庫：國家考試三等單字（來自 national_exam_vocab.js，內容原樣保留）=====
 // 國家考試 → 三等 → 高考、地特、關務（可複選）。單字來自歷年試題的選項與中文翻譯。
+// 已移除 8 個太簡單的介系詞：along、down、toward、up、about、for、with、of。
 // 重要性：同一個單字在整份單字表裡出現 2 次以上算 1 顆星，4 次 2 顆星，6 次 3 顆星，8 次 4 顆星，10 次以上 5 顆星。
 //        次數由程式依這份資料自動計算（stars: true），之後新增單字或考試，星數會自動更新。
 VOCAB_SETS.push({
@@ -9,10 +10,6 @@ VOCAB_SETS.push({
   stars: true,
   groups: [
     { name: "高考", items: [
-      ["along", "沿著；順著"],
-      ["down", "向下；沿著"],
-      ["toward", "向；朝向"],
-      ["up", "向上；在上方"],
       ["appreciated", "賞識；感激；升值"],
       ["decoded", "解碼；破譯"],
       ["forgotten", "遺忘"],
@@ -69,10 +66,6 @@ VOCAB_SETS.push({
       ["converged", "會合；聚集"],
       ["converted", "轉變；轉換"],
       ["condensed", "濃縮的；簡縮的"],
-      ["about", "關於；大約"],
-      ["for", "為了；對於"],
-      ["with", "與……一起；具有"],
-      ["of", "屬於；……的"],
       ["nuts", "堅果；螺帽"],
       ["suits", "套裝；訴訟"],
       ["bars", "鐵條；橫槓（雲梯）"],

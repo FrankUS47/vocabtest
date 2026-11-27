@@ -420,7 +420,7 @@ quiet|安靜的|adj.
 </div></div>
 
 <script>
-const APP_VERSION='v10',APP_DATE='2026-11-09';
+const APP_VERSION='v11',APP_DATE='2026-11-10';
 var SD=document;
 const $=id=>document.getElementById(id)||SD.getElementById(id);
 const shuf=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a};
@@ -495,6 +495,10 @@ function infoLine(modeText,o){
  else scope=names.length===SET.G.length?'全部（'+names.length+'）':names.length<=4?names.join('、'):names.slice(0,3).join('、')+' 等 '+names.length+' 個';
  const k=$('kind').value,p=$('pos').value;
  return ['題庫：'+SET.name,'方式：'+modeText,key+'：'+scope,k&&'內容：'+$('kind').selectedOptions[0].textContent,p&&'詞性：'+p,...(o.extra||[])].filter(Boolean).join('　｜　')}
+function seqSecs(ts,t0){const idx=ts.map((t,i)=>[t,i]).filter(([t])=>t).sort((a,b)=>a[0]-b[0]);const out=ts.map(()=>null);let prev=t0;idx.forEach(([t,i])=>{out[i]=Math.max(0,(t-prev)/1000);prev=t});return out}
+let pageT0=0,placeTs={},posTs=[],spellT0=0,spellTs=[];
+const fmtSecs=s=>s==null?'—':s.toFixed(1)+' 秒';
+const avgSecs=arr=>{const a=arr.filter(x=>x!=null);return a.length?(a.reduce((p,q)=>p+q,0)/a.length).toFixed(1)+' 秒':'—'};
 const fmtT=s=>String(s/60|0).padStart(2,'0')+':'+String(s%60).padStart(2,'0');
 let T0=0;const elapsedTick=()=>{$('timer').textContent='已用 '+fmtT((Date.now()-T0)/1000|0)};
 let curSet=null,FILL=false,fillCur=null,SPELL=false,spellOpen=false,LISTEN=false,TARGET=Infinity,lcdT=null,lst=null,spkTok=0;
@@ -546,7 +550,7 @@ function nextRound(){
  round=items;where=round.map(()=>-1);sel=null;locked=false;asked++;
  $('prog').textContent=BYG?'第 '+asked+' / '+GRtotal+' 組':'第 '+asked+' 頁 · 已完成 '+log.length+(TARGET<Infinity?' / '+TARGET:'')+' 題'+(NOREP&&TARGET===Infinity?'（剩 '+queue.length+' 題未出）':'');
  $('quiz').classList.remove('shuf','flip');if(!MEM)$('memmsg').textContent='';
- drawEn();bind();if(MEM)memPhase()}
+ drawEn();bind();pageT0=Date.now();placeTs={};if(MEM)memPhase()}
 function drawEn(){$('en').innerHTML=round.map((w,i)=>`<div class="col"><div class="en${T===0?' say':''}" data-i="${i}">${w[T]}${T===0?spk(i):''}</div><div class="slot" data-s="${i}"></div><div class="fix"></div></div>`).join('')}
 let MEM=false,memT=null;
 function memPhase(){
@@ -560,7 +564,7 @@ function memPhase(){
   const alive=()=>gen===asked&&!$('quiz').classList.contains('hide');
   $('quiz').classList.add('shuf');$('memmsg').textContent='洗牌中…（卡片翻到背面）';
   setTimeout(()=>{if(!alive())return;round=shuf(round);where=round.map(()=>-1);order=shuf(round.map((_,i)=>i));order.fresh=true;sel=null;drawEn();render()},1500);
-  setTimeout(()=>{if(!alive())return;$('quiz').classList.remove('shuf');$('quiz').classList.add('flip');locked=false;
+  setTimeout(()=>{if(!alive())return;$('quiz').classList.remove('shuf');$('quiz').classList.add('flip');locked=false;pageT0=Date.now();placeTs={};
    $('memmsg').textContent='開始作答：把中文拖回正確的英文卡下方';render();setTimeout(()=>$('quiz').classList.remove('flip'),600)},3000)},1000)}
 let order;
 function render(){
@@ -580,6 +584,7 @@ function place(card,slot){
  if(locked)return;
  if(slot<0){where[card]=-1}else{
   const occ=where.indexOf(slot);if(occ>=0)where[occ]=-1;where[card]=slot}
+ if(slot<0)delete placeTs[card];else placeTs[card]=Date.now();
  sel=null;render();
  if(where.every(x=>x>=0))check()}
 // override render using where[card]=slot
@@ -650,7 +655,7 @@ function nextFill(){
  const pool=keep&&letters.length>1?letters.slice(1):letters;
  const n=Math.max(1,Math.min(pool.length,Math.round(letters.length*ratio)));
  const blanks=new Set(shuf(pool).slice(0,n));
- fillCur={w,base,blanks,done:false};asked++;
+ fillCur={w,base,blanks,done:false,t0:Date.now()};asked++;
  $('prog').textContent='第 '+(log.length+1)+(TARGET<Infinity?' / '+TARGET:'')+' 題';
  $('fword').innerHTML=[...base].map((ch,i)=>`<div class="fcol"><div class="ftop">${blanks.has(i)?`<input class="fin" data-i="${i}" type="text" lang="en" inputmode="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">`:ch===' '?'<span class="fsp"></span>':`<span class="fch">${esc(ch)}</span>`}</div><div class="fbot"></div></div>`).join('');
  $('fzh').textContent='';$('fZhBtn').classList.remove('hide');$('fZhBtn').textContent='💬 顯示中文意思';
@@ -664,7 +669,7 @@ function fillSubmit(giveUp){
  fillCur.done=true;let ok=!giveUp;const typed=[...fillCur.base];
  ins.forEach(x=>{const i=+x.dataset.i,ch=fillCur.base[i],v=x.value.trim();typed[i]=v||'_';const good=v.toLowerCase()===ch.toLowerCase();if(!good)ok=false;x.readOnly=true;x.classList.add(good?'ok':'no');});
  if(!ok){ins.forEach(x=>{if(x.classList.contains('no')){const b=x.closest('.fcol').querySelector('.fbot');b.textContent=fillCur.base[+x.dataset.i]}})}
- const w=fillCur.w;log.push({en:w[0],zh:w[1],ans:giveUp?'（放棄）':typed.join(''),ok,pos:w[2],sim:w[3],w});
+ const w=fillCur.w;log.push({en:w[0],zh:w[1],ans:giveUp?'（放棄）':typed.join(''),ok,pos:w[2],sim:w[3],w,sec:(Date.now()-fillCur.t0)/1000});
  $('fzh').textContent=w[1]+(w[2]?'（'+w[2]+'）':'');
  $('fmsg').textContent=ok?'✔ 答對了':'✘ 正確答案：'+fillCur.base;$('fmsg').style.color=ok?'var(--ok)':'var(--no)';
  ['fOk','fGive','fZhBtn'].forEach(x=>$(x).classList.add('hide'));$('fNext').classList.remove('hide');$('fNext').focus()}
@@ -707,19 +712,20 @@ function nextSpell(){
   if(!queue.length){if(NOREP&&TARGET===Infinity)break;queue=shuf(words)}
   const w=queue.pop();if(items.some(x=>x[0]===w[0]))continue;items.push(w)}
  if(!items.length){finish();return}
- round=items;asked++;spellOpen=true;
+ round=items;asked++;spellOpen=true;spellT0=Date.now();spellTs=round.map(()=>null);
  $('prog').textContent='第 '+asked+' 頁 · 已完成 '+log.length+(TARGET<Infinity?' / '+TARGET:'')+' 題';
  $('sgrid').innerHTML=round.map((w,i)=>`<div class="srow"><span class="hint">${log.length+i+1}.</span><span class="szh">${esc(w[1])}</span><input class="sin" type="text" data-i="${i}" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"></div>`).join('');
  $('snext').textContent=log.length+round.length>=TARGET?'完成並看結果':'下一頁 ▶';
  const f=$('sgrid').querySelector('input');if(f)f.focus();window.scrollTo(0,0)}
 function submitSpell(noNext){
  if(!spellOpen)return;spellOpen=false;
- const ins=[...document.querySelectorAll('#sgrid .sin')];
+ const ins=[...document.querySelectorAll('#sgrid .sin')],ssecs=seqSecs(spellTs,spellT0);
  round.forEach((w,i)=>{const v=(ins[i]?ins[i].value:'').trim(),acc=spellAccept(w);
   const ok=!!v&&(acc.has(nzS(v))||acc.has(nzL(v)));
-  log.push({en:w[0],zh:w[1],ans:v||'（未填）',ok,pos:w[2],sim:w[3],w})});
+  log.push({en:w[0],zh:w[1],ans:v||'（未填）',ok,pos:w[2],sim:w[3],w,sec:v?ssecs[i]:null})});
  if(!noNext)nextSpell()}
 $('snext').onclick=()=>submitSpell(false);
+$('sgrid').addEventListener('input',e=>{const x=e.target.closest('.sin');if(x)spellTs[+x.dataset.i]=Date.now()});
 $('sgrid').addEventListener('keydown',e=>{if(e.key!=='Enter')return;e.preventDefault();
  const ins=[...document.querySelectorAll('#sgrid .sin')],i=ins.indexOf(e.target);
  if(i>=0&&i<ins.length-1)ins[i+1].focus();else $('snext').click()});
@@ -745,7 +751,7 @@ function nextListen(){
   picks=shuf(near).slice(0,n-1).map(x=>x[0])}
  else picks=shuf(pool).slice(0,n-1).map(x=>x[1]);
  const opts=shuf([ans,...picks]);
- lst={w,opts,done:false,kind,ans};asked++;
+ lst={w,opts,done:false,kind,ans,t0:Date.now()};asked++;
  $('prog').textContent='第 '+(log.length+1)+(TARGET<Infinity?' / '+TARGET:'')+' 題';
  $('lword').textContent='？';$('lword').classList.remove('show');
  $('lopts').className=opts.length>=8?'many':'';
@@ -755,7 +761,7 @@ function nextListen(){
 $('lopts').addEventListener('click',e=>{
  const b=e.target.closest('.lopt');if(!b||!lst||lst.done)return;
  lst.done=true;const z=lst.opts[+b.dataset.k],w=lst.w,ok=z===lst.ans;
- log.push({en:w[0],zh:w[1],ans:z,ok,pos:w[2],sim:w[3],w});
+ log.push({en:w[0],zh:w[1],ans:z,ok,pos:w[2],sim:w[3],w,sec:(Date.now()-lst.t0)/1000});
  document.querySelectorAll('.lopt').forEach((x,i)=>{x.disabled=true;if(lst.opts[i]===lst.ans)x.classList.add('ok');else if(x===b)x.classList.add('no')});
  $('lword').innerHTML=`<div>${w[0]} <button class="lsp" title="發音">🔊</button></div><div style="font-size:16px;font-weight:400;margin-top:6px">${w[1]}</div>`;$('lword').classList.add('show');
  const last=log.length>=TARGET;$('lnextBtn').disabled=false;$('lnextBtn').textContent=last?'看結果':'下一題 ▶';
@@ -789,10 +795,11 @@ document.addEventListener('dragend',()=>{drag=null;document.querySelectorAll('.s
 
 function check(){
  locked=true;const slots=document.querySelectorAll('.slot'),fx=document.querySelectorAll('.fix');
+ const secs=seqSecs(round.map((_,i)=>placeTs[where.indexOf(i)]||null),pageT0);
  round.forEach((w,i)=>{
   const card=where.indexOf(i);   // card sitting in slot i
   const ok=round[card][B]===w[B];
-  log.push({en:w[0],zh:w[1],ans:round[card][B],ok,pos:w[2],sim:w[3],w});
+  log.push({en:w[0],zh:w[1],ans:round[card][B],ok,pos:w[2],sim:w[3],w,sec:secs[i]});
   slots[i].classList.add(ok?'ok':'no');
   if(!ok)fx[i].textContent='✔ '+w[B]});
  const wrongAny=log.slice(-round.length).some(x=>!x.ok);
@@ -807,12 +814,12 @@ function nextPosRound(){
  const need=Math.min(5,TARGET-log.length);
  while(items.length<need&&tries++<words.length*3){if(!queue.length){if(NOREP&&TARGET===Infinity)break;queue=shuf(words)}const w=queue.pop();if(!items.some(x=>x[0]===w[0]))items.push(w)}
  if(NOREP&&!items.length){finish();return}
- round=items;pchosen=round.map(()=>[]);psel=null;locked=false;asked++;
+ round=items;pchosen=round.map(()=>[]);psel=null;locked=false;asked++;pageT0=Date.now();posTs=round.map(()=>null);
  $('prog').textContent='第 '+asked+' 頁 · 已完成 '+log.length+' 題';drawPos()}
 function drawPos(){
  $('pgrid').innerHTML=round.map((w,i)=>`<div class="pw"><div class="en say" data-i="${i}">${w[0]}${spk(i)}</div><div class="prow" data-i="${i}">${[0,1,2,3].map(j=>`<div class="ps">${pchosen[i][j]?`<span class="pchip" data-i="${i}" data-p="${pchosen[i][j]}">${pchosen[i][j]}</span>`:''}</div>`).join('')}</div><div class="fix"></div></div>`).join('');
  $('tray').innerHTML=PB.map(p=>`<span class="chip${psel===p?' sel':''}" draggable="true" data-p="${p}">${p}</span>`).join('')}
-function addPos(i,p){if(locked||pchosen[i].includes(p))return;pchosen[i].push(p);psel=null;drawPos()}
+function addPos(i,p){if(locked||pchosen[i].includes(p))return;pchosen[i].push(p);posTs[i]=Date.now();psel=null;drawPos()}
 document.addEventListener('click',e=>{
  if(!posMode||locked||$('quiz').classList.contains('hide'))return;
  const pc=e.target.closest('.pchip');if(pc){const i=+pc.dataset.i;pchosen[i]=pchosen[i].filter(x=>x!==pc.dataset.p);drawPos();return}
@@ -825,9 +832,10 @@ document.addEventListener('dragend',()=>{pdrag=null;document.querySelectorAll('.
 $('pok').onclick=()=>{
  if(!posMode||locked||!round.length)return;locked=true;
  const rows=document.querySelectorAll('.prow'),fx=document.querySelectorAll('#pgrid .fix');
+ const psecs=seqSecs(posTs,pageT0);
  round.forEach((w,i)=>{
   const want=baseOf(w[2]).sort(),got=pchosen[i].map(x=>x.replace('.','')).sort(),ok=want.join()===got.join();
-  log.push({en:w[0],zh:w[1],ans:pchosen[i].join('/')||'（未選）',ok,pos:w[2],sim:'',w});
+  log.push({en:w[0],zh:w[1],ans:pchosen[i].join('/')||'（未選）',ok,pos:w[2],sim:'',w,sec:psecs[i]});
   rows[i].classList.add(ok?'ok':'no');
   fx[i].textContent=(ok?'':'✔ '+want.map(x=>x+'.').join(' / ')+'　')+w[1]});
  const gen=asked,wrong=log.slice(-round.length).some(x=>!x.ok);
@@ -1001,17 +1009,18 @@ function p2Stop(){
  P2.playing=false;const pb=$('p2pPlay');if(pb)pb.textContent='🔊 播放'}
 function p2Status(t){$('p2status').textContent=t+(P2.usedTts?'（部分使用系統語音）':'')}
 function p2SetCur(i){
+ if(i>=0&&P2.qStart&&!P2.qStart[i])P2.qStart[i]=Date.now();
  P2.cur=i;document.querySelectorAll('#p2sheet .p2row').forEach(r=>{const k=+r.dataset.k;r.classList.toggle('cur',k===i);r.classList.toggle('future',k>i)})}
 function p2BuildSheet(){
  $('p2sheet').innerHTML=P2.exam.questions.map((q,k)=>`<div class="p2row future" data-k="${k}"><span class="p2spk">🔊</span><span class="p2no">${q.no}.</span>${'ABC'.split('').map(l=>`<button class="p2opt${P2.ans[q.no]===l?' sel':''}" data-k="${k}" data-l="${l}">(${l})</button>`).join('')}</div>`).join('')}
 $('p2sheet').addEventListener('click',e=>{
  const b=e.target.closest('.p2opt');if(!b)return;const k=+b.dataset.k;if(k>P2.cur)return;
- const q=P2.exam.questions[k];P2.ans[q.no]=b.dataset.l;
+ const q=P2.exam.questions[k];P2.ans[q.no]=b.dataset.l;P2.ansT[q.no]=Date.now();
  b.parentElement.querySelectorAll('.p2opt').forEach(x=>x.classList.toggle('sel',x===b))});
 function p2Prime(){try{if('speechSynthesis' in window){const u=new SpeechSynthesisUtterance('.');u.volume=0;speechSynthesis.speak(u)}}catch(e){}}
 function p2Begin(mode){
  const ex=PART2_EXAMS.find(e=>e.id===$('p2exam').value);if(!ex){$('p2msg').textContent='沒有載入 Part 2 題庫（請確認 data/part2.js）。';return false}
- p2Stop();P2.exam=ex;P2.ans={};P2.cur=-1;P2.mode=mode;P2.usedTts=false;P2.t0=Date.now();homeTab='p';
+ p2Stop();P2.exam=ex;P2.ans={};P2.cur=-1;P2.qStart=[];P2.ansT={};P2.ansSec={};P2.mode=mode;P2.usedTts=false;P2.t0=Date.now();homeTab='p';
  const c=p2Cfg();P2.cfg=c;
  P2.info=['TOEIC 聽力 Part 2',ex.label,'聲音：'+(c.useFile?'我的音檔（找不到時用系統語音）':'系統語音 '+$('p2acc').selectedOptions[0].textContent),'語速 '+c.rate.toFixed(1)+'×'].join('　｜　');
  $('p2msg').textContent='';return true}
@@ -1045,7 +1054,7 @@ $('p2stop').onclick=()=>{if(!confirm('要現在交卷、結束測驗嗎？尚未
 const p2Explain=q=>'【問句中譯】'+q.zh+'\n【選項翻譯】\n'+q.o.map((o,i)=>o+'　＝　'+q.ozh[i]).join('\n');
 function p2Finish(){
  const ex=P2.exam;p2Stop();
- const log=ex.questions.map((q,i)=>{const ch=P2.ans[q.no]||null;return {q:{id:'P2_'+ex.id+'_'+q.no,no:q.no,q:q.q,o:q.o,a:q.a,e:p2Explain(q),ref:'TOEIC 聽力 Part 2｜'+ex.label,p2:{ex:ex.id,i}},chosen:ch,ok:ch===q.a,status:!ch?'skip':ch===q.a?'ok':'wrong'}});
+ const log=ex.questions.map((q,i)=>{const ch=P2.ans[q.no]||null;return {q:{id:'P2_'+ex.id+'_'+q.no,no:q.no,q:q.q,o:q.o,a:q.a,e:p2Explain(q),ref:'TOEIC 聽力 Part 2｜'+ex.label,p2:{ex:ex.id,i}},chosen:ch,ok:ch===q.a,status:!ch?'skip':ch===q.a?'ok':'wrong',sec:!ch?null:(P2.mode==='practice'?(P2.ansSec[q.no]!=null?P2.ansSec[q.no]:null):(P2.ansT[q.no]&&P2.qStart[i]?Math.max(0,(P2.ansT[q.no]-P2.qStart[i])/1000):null))}});
  M={c:{s:{name:'TOEIC 聽力 Part 2'},info:P2.info,time:0,total:0,p2:{mode:P2.mode}},list:log.map(x=>x.q),log,i:0,t:null,tt:null,autoT:null,cur:null,left:0,t0:P2.t0,wrong:[]};
  $('mrinfo').textContent=P2.info;
  if(P2.mode==='practice'){M.list=log.filter(x=>x.chosen).map(x=>x.q);M.log=log.filter(x=>x.chosen)}
@@ -1065,7 +1074,7 @@ $('p2practice').onclick=()=>{
  if(!p2Begin('practice'))return;p2Prime();
  P2.pi=0;P2.cur=P2.exam.questions.length-1;$('p2pinfo').textContent=P2.info;show('p2Practice');p2pShow(0,true)};
 function p2pShow(i,auto){
- const ex=P2.exam,n=ex.questions.length;i=Math.max(0,Math.min(n-1,i));P2.pi=i;const q=ex.questions[i];
+ const ex=P2.exam,n=ex.questions.length;i=Math.max(0,Math.min(n-1,i));if(i!==P2.pi||!P2.pShown||auto)P2.pShown=Date.now();P2.pi=i;const q=ex.questions[i];
  $('p2pno').textContent='第 '+q.no+' 題（'+(i+1)+' / '+n+'）';
  const showT=$('p2pText').checked,showZ=$('p2pZh').checked,ch=P2.ans[q.no];
  $('p2pbox').innerHTML=(showT?`<div class="mq" style="font-size:18px">${esc(q.q)}</div>`:'')+(showZ?`<div class="hint" style="font-size:15px">${esc(q.zh)}</div>`:'')+
@@ -1073,7 +1082,7 @@ function p2pShow(i,auto){
   (ch?`<div style="font-weight:700;color:var(--${ch===q.a?'ok':'no'})">${ch===q.a?'✔ 答對了':'✘ 答錯了，正確答案是 ('+q.a+')'}</div>`:'');
  $('p2pPrev').disabled=i<=0;$('p2pNext').disabled=i>=n-1;
  if(auto&&$('p2pAuto').checked)p2pPlay()}
-$('p2pbox').addEventListener('click',e=>{const b=e.target.closest('.p2opt');if(!b)return;const q=P2.exam.questions[P2.pi];P2.ans[q.no]=b.dataset.l;p2pShow(P2.pi,false)});
+$('p2pbox').addEventListener('click',e=>{const b=e.target.closest('.p2opt');if(!b)return;const q=P2.exam.questions[P2.pi];P2.ans[q.no]=b.dataset.l;P2.ansSec[q.no]=(Date.now()-P2.pShown)/1000;p2pShow(P2.pi,false)});
 $('p2pText').onchange=$('p2pZh').onchange=()=>p2pShow(P2.pi,false);
 $('p2pPrev').onclick=()=>{p2Stop();p2pShow(P2.pi-1,true)};
 $('p2pNext').onclick=()=>{p2Stop();p2pShow(P2.pi+1,true)};
@@ -1142,7 +1151,7 @@ searchBind($('msearch'),$('msres'),()=>M?M.log.map((x,i)=>{const q=x.q;return {i
  it=>`${it.i+1}. ${esc(((it.x.q.no!==undefined?it.x.q.no+'. ':'')+it.x.q.q).slice(0,70))}　<span class="hint">${it.x.ok?'✓':'✗'}</span>`,
  i=>{if(!$('mr'+i)){$('monlyW').checked=false;drawMList()}const r=$('mr'+i);if(r){r.scrollIntoView({block:'center',behavior:'smooth'});hl(r)}});
 let rvIdx=0,rvKind='v';
-const vEntryHtml=(x,i)=>`<div class="mres"><div class="hint">第 ${i+1} 題</div><div style="font-size:22px;font-weight:700">${esc(x.en)} <button class="rvsp" data-w="${esc(x.en)}" title="發音">🔊</button></div><div style="margin-top:4px">${esc(x.zh)}${x.pos?'　<span class="hint">('+esc(x.pos)+')</span>':''}</div><div style="margin-top:8px">你的答案：<b style="color:var(--${x.ok?'ok':'no'})">${esc(x.ans)}</b>　${x.ok?'✔ 答對':'✘ 答錯'}</div></div>`;
+const vEntryHtml=(x,i)=>`<div class="mres"><div class="hint">第 ${i+1} 題</div><div style="font-size:22px;font-weight:700">${esc(x.en)} <button class="rvsp" data-w="${esc(x.en)}" title="發音">🔊</button></div><div style="margin-top:4px">${esc(x.zh)}${x.pos?'　<span class="hint">('+esc(x.pos)+')</span>':''}</div><div style="margin-top:8px">你的答案：<b style="color:var(--${x.ok?'ok':'no'})">${esc(x.ans)}</b>　${x.ok?'✔ 答對':'✘ 答錯'}${x.sec!=null?'　用時 '+x.sec.toFixed(1)+' 秒':''}</div></div>`;
 function openReview(){
  const mcq=!$('mcqQuiz').classList.contains('hide');rvKind=mcq?'m':'v';
  const L=mcq?(M?M.log:[]):log;if(!L.length){alert('還沒有上一題可以回顧。');return}
@@ -1276,7 +1285,7 @@ function mTimerTxt(){$('mtimer').textContent=M.left+' 秒';$('mtimer').classList
 function nextM(){
  clearInterval(M.t);clearTimeout(M.autoT);M.i++;
  if(M.i>=M.list.length){finishM();return}
- const q=M.list[M.i];M.cur={q,done:false,exp:false};
+ const q=M.list[M.i];M.cur={q,done:false,exp:false,t0:Date.now()};
  $('mprog').textContent='第 '+(M.i+1)+' / '+M.list.length+' 題';$('mref').textContent=q.ref||'';
  $('mq').textContent=(q.no!==undefined?q.no+'. ':'')+q.q;
  if(q.p!==undefined){$('mpass').innerHTML=passHtml(M.c.s,q);$('mpass').classList.remove('hide');const cu=$('mpass').querySelector('.cur');if(cu)cu.scrollIntoView({block:'nearest'})}else $('mpass').classList.add('hide');
@@ -1289,7 +1298,7 @@ function nextM(){
 function mReveal(chosen,status){
  const cur=M.cur,q=cur.q;cur.done=true;clearInterval(M.t);
  document.querySelectorAll('.mopt').forEach(b=>{b.disabled=true;if(b.dataset.k===q.a)b.classList.add('ok');else if(b.dataset.k===chosen)b.classList.add('no')});
- M.log.push({q,chosen,ok:status==='ok',status});
+ M.log.push({q,chosen,ok:status==='ok',status,sec:(Date.now()-cur.t0)/1000});
  $('mfb').textContent=status==='ok'?'✔ 答對了':status==='timeout'?'⏰ 時間到，正確答案是 ('+q.a+')':'✘ 答錯了，正確答案是 ('+q.a+')';
  $('mfb').style.color=status==='ok'?'var(--ok)':'var(--no)';
  if(M.c.time&&!cur.exp){let s=3;const gen=M.i;const say=()=>$('mauto').textContent=s+' 秒後自動下一題（按「詳解」可暫停）';say();
@@ -1297,7 +1306,7 @@ function mReveal(chosen,status){
 function mTimeout(){if(M.cur&&!M.cur.done)mReveal(null,'timeout')}
 $('mopts').addEventListener('click',e=>{const b=e.target.closest('.mopt');if(!b||!M||!M.cur||M.cur.done)return;mReveal(b.dataset.k,b.dataset.k===M.cur.q.a?'ok':'wrong')});
 $('mhintBtn').onclick=()=>{if(!M||!M.cur)return;const o=$('mhint').classList.toggle('hide');$('mhintBtn').textContent=o?'💡 提示':'💡 收起提示'};
-$('mnext').onclick=()=>{if(!M||!M.cur)return;if(!M.cur.done){M.log.push({q:M.cur.q,chosen:null,ok:false,status:'skip'});M.cur.done=true}nextM()};
+$('mnext').onclick=()=>{if(!M||!M.cur)return;if(!M.cur.done){M.log.push({q:M.cur.q,chosen:null,ok:false,status:'skip',sec:(Date.now()-M.cur.t0)/1000});M.cur.done=true}nextM()};
 $('mexpBtn').onclick=()=>{if(!M||!M.cur)return;const c=M.cur;c.exp=!c.exp;$('mexp').classList.toggle('hide',!c.exp);$('mexpBtn').textContent=c.exp?'📖 收起詳解':'📖 詳解';
  if(c.exp){clearTimeout(M.autoT);$('mauto').textContent='';if(!c.done){clearInterval(M.t);$('mtimer').textContent='已暫停'}}};
 $('mstop').onclick=finishM;
@@ -1309,7 +1318,8 @@ function finishM(){
  if(!M||!$('mcqResult').classList.contains('hide'))return;
  clearInterval(M.t);clearInterval(M.tt);clearTimeout(M.autoT);show('mcqResult');$('msearch').value='';$('msres').classList.add('hide');
  const total=M.log.length,ok=M.log.filter(x=>x.ok).length,skip=M.log.filter(x=>x.status==='skip'||x.status==='timeout').length;
- $('mstats').innerHTML=`<div class="stat"><b>${total}</b>作答題數</div><div class="stat"><b style="color:var(--ok)">${ok}</b>答對</div><div class="stat"><b style="color:var(--no)">${total-ok}</b>答錯</div><div class="stat"><b>${skip}</b>逾時／略過</div><div class="stat"><b>${total?Math.round(ok/total*100):0}%</b>正確率</div><div class="stat"><b>${String((Date.now()-M.t0)/60000|0).padStart(2,'0')}:${String(((Date.now()-M.t0)/1000|0)%60).padStart(2,'0')}</b>用時</div>${M.list.length>total?`<div class="stat"><b>${M.list.length-total}</b>未作答</div>`:''}`;
+ const _avg=avgSecs(M.log.map(x=>x.sec));
+ $('mstats').innerHTML=`<div class="stat"><b>${total}</b>作答題數</div><div class="stat"><b style="color:var(--ok)">${ok}</b>答對</div><div class="stat"><b style="color:var(--no)">${total-ok}</b>答錯</div><div class="stat"><b>${skip}</b>逾時／略過</div><div class="stat"><b>${total?Math.round(ok/total*100):0}%</b>正確率</div><div class="stat"><b>${String((Date.now()-M.t0)/60000|0).padStart(2,'0')}:${String(((Date.now()-M.t0)/1000|0)%60).padStart(2,'0')}</b>用時</div><div class="stat"><b>${_avg}</b>平均每題</div>${M.list.length>total?`<div class="stat"><b>${M.list.length-total}</b>未作答</div>`:''}`;
  const sw=new Set();M.wrong=M.log.filter(x=>!x.ok&&x.q&&!sw.has(x.q.id)&&sw.add(x.q.id)).map(x=>x.q);
  $('mresTitle').textContent=M.c&&M.c.p2?'TOEIC 聽力 Part 2 測驗結果':'選擇題測驗結果';$('mwrongBtn').classList.toggle('hide',!M.wrong.length||!!(M.c&&M.c.p2));$('mwrongBtn').textContent='只測錯的題目（'+M.wrong.length+'）';
  drawMList()}
@@ -1317,7 +1327,7 @@ function mresHtml(x,i,rv){const q=x.q;
  const lab=x.status==='ok'?'<span class="mbadge ok">✔ 答對</span>':x.status==='timeout'?'<span class="mbadge no">⏰ 逾時</span>':x.status==='skip'?'<span class="mbadge no">略過</span>':'<span class="mbadge no">✘ 答錯</span>';
  const opts=q.o.map((o,k)=>{const l=LET[k];const cls=l===q.a?'ok':l===x.chosen?'no':'';return `<div class="mo ${cls}">${l===q.a?'✔ ':l===x.chosen?'✘ ':''}${esc(o)}</div>`}).join('');
  const exp=rv?`<div style="margin-top:8px"><button class="sm" data-rve="1">📖 詳解</button></div><div class="mexp hide">${esc(q.e||'（這題沒有詳解）')}</div>`:`<div class="hint" style="margin-top:8px">📖 詳解（中文翻譯）</div><div class="mexp">${esc(q.e||'（這題沒有詳解）')}</div>`;
- return `<div class="mres"${rv?'':` id="mr${i}"`}><div class="hint">${i+1}. ${esc(q.ref||'')}</div><div>${lab}</div>${q.p2?`<div style="margin:4px 0"><button class="sm p2re" data-ex="${esc(q.p2.ex)}" data-i="${q.p2.i}">🔊 再聽一次</button></div>`:''}${q.p!==undefined?`<details style="margin:6px 0"${rv?' open':''}><summary>📄 看文章</summary><div class="mpass">${passHtml(M.c.s,q)}</div></details>`:''}<div class="mq" style="font-size:16px">${esc((q.no!==undefined?q.no+'. ':'')+q.q)}</div>${opts}${exp}</div>`}
+ return `<div class="mres"${rv?'':` id="mr${i}"`}><div class="hint">${i+1}. ${esc(q.ref||'')}</div><div>${lab}${x.sec!=null?` <span class="hint">用時 ${x.sec.toFixed(1)} 秒</span>`:''}</div>${q.p2?`<div style="margin:4px 0"><button class="sm p2re" data-ex="${esc(q.p2.ex)}" data-i="${q.p2.i}">🔊 再聽一次</button></div>`:''}${q.p!==undefined?`<details style="margin:6px 0"${rv?' open':''}><summary>📄 看文章</summary><div class="mpass">${passHtml(M.c.s,q)}</div></details>`:''}<div class="mq" style="font-size:16px">${esc((q.no!==undefined?q.no+'. ':'')+q.q)}</div>${opts}${exp}</div>`}
 function drawMList(){
  const only=$('monlyW').checked;
  $('mlist').innerHTML=M.log.map((x,i)=>[x,i]).filter(([x])=>!only||!x.ok).map(([x,i])=>mresHtml(x,i,false)).join('')||'<p class="hint">沒有資料</p>'}
@@ -1375,12 +1385,12 @@ function finish(){
  const wrong=log.filter(x=>!x.ok).length,total=log.length;
  const sw=new Set();lastWrong=log.filter(x=>!x.ok&&x.w).map(x=>x.w).filter(w=>{const k=w[0]+'|'+w[1];if(sw.has(k))return false;sw.add(k);return true});
  $('wrongBtn').classList.toggle('hide',!lastWrong.length);$('wrongBtn').textContent='只測錯的單字（'+lastWrong.length+'）';
- $('stats').innerHTML=`<div class="stat"><b>${total}</b>作答題數</div><div class="stat"><b style="color:var(--ok)">${total-wrong}</b>答對</div><div class="stat"><b style="color:var(--no)">${wrong}</b>答錯</div><div class="stat"><b>${total?Math.round((total-wrong)/total*100):0}%</b>正確率</div><div class="stat"><b>${fmtT(Math.round((Date.now()-T0)/1000))}</b>用時</div>`;
+ $('stats').innerHTML=`<div class="stat"><b>${total}</b>作答題數</div><div class="stat"><b style="color:var(--ok)">${total-wrong}</b>答對</div><div class="stat"><b style="color:var(--no)">${wrong}</b>答錯</div><div class="stat"><b>${total?Math.round((total-wrong)/total*100):0}%</b>正確率</div><div class="stat"><b>${fmtT(Math.round((Date.now()-T0)/1000))}</b>用時</div><div class="stat"><b>${avgSecs(log.map(x=>x.sec))}</b>平均每題</div>`;
  drawRows()}
 function drawRows(){
- const only=$('onlyW').checked,hp=log.some(x=>x.pos),hs=log.some(x=>x.sim),hst=!!(curSet&&log.some(x=>x.w&&badgeOf(curSet,x.w)));
- $('thead').innerHTML='<tr><th>英文</th><th>正確中文</th>'+(hp?'<th>詞性</th>':'')+(hs?'<th>相似字</th>':'')+(hst?'<th>'+(curSet.freq?'出現次數':'重要性')+'</th>':'')+'<th>你的答案</th><th></th></tr>';
- const rows=log.map((x,i)=>[x,i]).filter(([x])=>!only||!x.ok).map(([x,i])=>`<tr id="vr${i}"><td>${x.en} <button class="spk" data-ri="${i}" title="發音">🔊</button></td><td class="r">${x.zh}</td>${hp?`<td>${x.pos}</td>`:''}${hs?`<td>${x.sim}</td>`:''}${hst?`<td>${x.w?esc(badgeOf(curSet,x.w)):''}</td>`:''}<td class="${x.ok?'r':'w'}">${x.ans}</td><td>${x.ok?'✓':'✗'}</td></tr>`);
+ const only=$('onlyW').checked,hp=log.some(x=>x.pos),hs=log.some(x=>x.sim),hst=!!(curSet&&log.some(x=>x.w&&badgeOf(curSet,x.w))),hsec=log.some(x=>x.sec!=null);
+ $('thead').innerHTML='<tr><th>英文</th><th>正確中文</th>'+(hp?'<th>詞性</th>':'')+(hs?'<th>相似字</th>':'')+(hst?'<th>'+(curSet.freq?'出現次數':'重要性')+'</th>':'')+'<th>你的答案</th>'+(hsec?'<th>用時</th>':'')+'<th></th></tr>';
+ const rows=log.map((x,i)=>[x,i]).filter(([x])=>!only||!x.ok).map(([x,i])=>`<tr id="vr${i}"><td>${x.en} <button class="spk" data-ri="${i}" title="發音">🔊</button></td><td class="r">${x.zh}</td>${hp?`<td>${x.pos}</td>`:''}${hs?`<td>${x.sim}</td>`:''}${hst?`<td>${x.w?esc(badgeOf(curSet,x.w)):''}</td>`:''}<td class="${x.ok?'r':'w'}">${x.ans}</td>${hsec?`<td>${fmtSecs(x.sec)}</td>`:''}<td>${x.ok?'✓':'✗'}</td></tr>`);
  $('rows').innerHTML=rows.join('')||'<tr><td colspan="6">沒有資料</td></tr>'}
 $('onlyW').onchange=drawRows;
 document.addEventListener('click',e=>{const b=e.target.closest('.spk[data-ri]');if(b&&!$('result').classList.contains('hide'))speak(log[+b.dataset.ri].en)});
